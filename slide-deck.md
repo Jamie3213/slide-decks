@@ -2,6 +2,11 @@
 marp: true
 ---
 
+<!--
+* What we're going to talk about
+* Talk is based on the blog "Pragmatic Functional Programming in Python"
+-->
+
 # **Monads in Python**
 
 ## How They Work & Why You Shouldn't Use Them
@@ -189,7 +194,7 @@ add_one(zero_point_five)
 
 ---
 
-## **Just use `fmap`, dummy**
+## **Compose like Beethoven with `fmap`**
 
 We can use a Functor's `fmap` method to compose functions.
 
@@ -225,4 +230,131 @@ result.either(
 )
 ```
 
-Annoyingly, PyMonad refers to `fmap` as `map` 👎
+Annoyingly, PyMonad renamed `fmap` to `map` in its latest release 👎
+
+---
+
+## **Compose to your heart's content**
+
+```python
+add_ten = lambda a: a + 10
+multiply_by_two = lambda a: a * 2
+cube = lambda a: a ** 3
+convert_to_int = lambda a: int(a)
+format_as_string = lambda a: f"{a:,}"
+
+result = (
+    divide(4.0, 2.0)
+    .then(add_ten)
+    .then(multiply_by_two)
+    .then(cube)
+    .then(convert_to_int)
+    .then(format_as_string)
+)
+
+# 13,824
+result.either(
+    lambda left: print(left),
+    lambda right: print(right)
+)
+```
+
+---
+
+## **There isn't much more to a Functor**
+
+Functors are just a means to:
+
+* Handle side-effects to maintain functional purity
+* Compose functions
+
+---
+
+## **All this talk of curry is making me hungry**
+
+> Currying converts a function of `n` parameters into `n` functions, each with a single parameter.
+
+</br>
+
+```python
+from pymonad.tools import curry
+
+@curry(2)
+def add_n(n: int, a: int) -> int:
+    return a + n
+
+add_one = add_n(1)
+add_two = add_n(2)
+
+# 2, 3
+print(add_one(1), add_two(1), sep=", ")
+```
+
+---
+
+## **What happens if we want to use a curried function directly in a composition chain?**
+
+```python
+result = (
+    divide(1.0, 2.0)
+    .map(add_n)
+    . # Erm...what now?
+)
+```
+
+* `map(add_n)` returns a function wrapped in a Functor
+* We can't use another call to `map` to pass a value into the function because `map` doesn't know what to do with a function wrapped in a Functor
+
+
+---
+
+## **What's an Applicative?**
+
+Applicatives are like Functors but they define a different method, this time called `amap`
+
+```python
+def amap(self: "Applicative[Callable[[T], U]]", value: "Applicative[T]") -> "Applicative[U]": ...
+```
+
+<!-- markdownlint-disable MD033 -->
+<style>
+img[alt~="center"] {
+  display: block;
+  margin: 0 auto;
+}
+</style>
+
+</br>
+
+![width:800px center](assets/amap.svg)
+
+---
+
+## **How is `amap` useful to us?**
+
+> `Either` is a Functor because it defines an `fmap` method, but it's also an Applicative because it also defines an `amap` method.
+
+</br>
+
+```python
+result = (
+    divide(1.0, 2.0) # Right(0.5)
+    .map(add_n) # Right(<add_n, n=0.5>)
+    .amap(Right(0.5)) # Right(1.0)
+)
+
+# 1.0
+result.either(
+    lambda left: print(left),
+    lambda right: print(right)
+)
+```
+
+---
+
+## **It turns out that Applicatives aren't too bad either**
+
+Applicatives combined with currying allow to:
+
+* Use multi-parameter functions in composition
+* Pass values from outside the chain into functions
