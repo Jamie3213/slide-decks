@@ -204,7 +204,7 @@ def fmap(self: "Functor[T]", function: Callable[[T], U]) -> "Functor[U]": ...
 
 <!-- markdownlint-disable MD033 -->
 <style>
-img[alt~="center"] {
+img[alt="center"] {
   display: block;
   margin: 0 auto;
 }
@@ -358,3 +358,206 @@ Applicatives combined with currying allow to:
 
 * Use multi-parameter functions in composition
 * Pass values from outside the chain into functions
+
+---
+
+## **We're *finally* ready to talk about Monads?**
+
+* Surprise! 🎉 `Either` is also a Monad!
+* Lots things are Functors, Applicatives *and* Monads
+* This isn't always the case, e.g., PyMonad's `Writer` Monad doesn't have an `amap` method.
+
+---
+
+## **`map`, `amap` and...?**
+
+Just like Functors and Applicatives, Monads have a special method, and their method is called `bind`.
+
+```python
+def bind(self: "Monad[T]", function: Callable[[T], "Monad[U]"]) -> "Monad[U]": ...
+```
+
+<!-- markdownlint-disable MD033 -->
+<style>
+img[alt="center"] {
+  display: block;
+  margin: 0 auto;
+}
+</style>
+
+</br>
+
+![width:800px center](assets/bind.svg)
+
+---
+
+## **This looks suspciously like `map`...when would I need this?**
+
+Using `bind` let's us compose Monadic functions (instead of normal, every-day functions)
+
+---
+
+```python
+import os
+
+from pymonad.either import Either, Left, Right
+from pymonad.tools import curry
+
+
+def get_env(var: str) -> Either[KeyError, str]:
+    try:
+        return Right(os.environ[var])
+    except KeyError as e:
+        return Left(e)
+
+@curry(2)
+def divide(b: float, a: float) -> Either[ZeroDivisionError, float]:
+    if b == 0:
+        return Left(ZeroDivisionError)
+    else:
+        return Right(a / b)
+
+
+divide_by_two = divide(2.0)
+
+# Normally, this would already be set in the environment.
+os.environ["NUMBER"] = "10"
+
+result = (
+    get_env("NUMBER")
+    .map(lambda num: float(num))
+    .bind(divide_by_two)
+    .map(lambda num: num * 1_000)
+    .map(lambda num: f"{num:,.0f}")
+)
+
+# 5,000
+resut.either(
+    lambda left: print(left),
+    lambda right: print(right)
+)
+```
+
+---
+
+## ✋ **Erm, shouldn't you be using the IO Monad?**
+
+* We've been using `Either`, even for I/O actions - FP purists would call us out for this
+* In languages like Haskell, we'd use `IO`
+
+---
+
+## **How does the `IO` Monad work?**
+
+`IO` wraps side-effecting functions and delays their execution.
+
+```python
+import os
+
+from pymonad.io import IO, _IO
+
+
+def get_env(var: str) -> _IO:
+    return IO(lambda: os.environ[var])
+
+
+os.environ["MY_VAR"] = "My environment variable"
+my_var = get_env("MY_VAR")
+
+# Type: <class 'pymonad.io._IO'>, value: <pymonad.io._IO object at 0x10095a890>
+print(f"Type: {type(my_var)}, value: {my_var}")
+```
+
+---
+
+## **To get execute the function, we need to call the `run` method**
+
+```python
+my_var = get_env("MY_VAR")
+
+# My environment variable
+print(my_var.run())
+```
+
+</br>
+
+* `IO` is considered pure because it doesn't actually execute anything
+* `IO` contains *instructions* on how to perfom `IO`
+* A function using `IO` always returns a consistent result, i.e., an instance of `_IO`
+
+---
+
+## **Did you buy that?**
+
+> If it looks like a duck, swims like a duck and quacks like a duck, then it's probably a duck.
+
+</br>
+
+* Are functions really pure just because we delay their execution?
+* If anything, all `IO` tells us is that the function is *definitely* doing something impure
+* `IO` alone still blows up on an error once we do run it
+* PyMonad doesn't support Monad transformers
+
+---
+
+## **Just use a type alias**
+
+```python
+import os
+from typing import TypeAlias
+
+from pymonad.either import Either, Left, Right
+
+
+EnvironmentIO: TypeAlias = Either[KeyError, str]
+
+
+def get_env(var: str) -> EnvironmentIO:
+    try:
+        return Right(os.environ[var])
+    except KeyError as e:
+        return Left(e)
+```
+
+---
+
+## **Should we bother with Monads in Python at all?**
+
+...probably not.
+
+<!-- markdownlint-disable MD033 -->
+<style>
+img[alt~="center-rounded-shadow"] {
+  display: block;
+  margin: 0 auto;
+  border-radius: 7.5%;
+  box-shadow: rgba(100, 100, 111, 0.8) 0px 7px 29px 0px;
+}
+</style>
+
+![width:400px center-rounded-shadow](assets/vindicating_tweet.png)
+
+---
+
+## **Square peg, round hole (again)**
+  
+> Monads aren't Pythonic.
+
+</br>
+
+* Python shouldn't look like Haskell, Scala, Clojure, OCaml, F#, Lisp, ML etc.
+* You're not the only person who has to maintain your code
+* Heavy use of Monads stops Python looking and behaving like Python
+
+---
+
+## **What was actually useful about Monads?**
+
+* Easy function composition
+* Encoding behaviour in function signatures
+
+---
+
+## **Don't be a zealout**
+
+> When it comes to FP, we should be pragmatic, taking the parts of the paradigm that work for us and make our code better and not worrying ourselves too much about the parts that don’t.
