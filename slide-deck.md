@@ -2,11 +2,6 @@
 marp: true
 ---
 
-<!--
-* What we're going to talk about
-* Talk is based on the blog "Pragmatic Functional Programming in Python"
--->
-
 # **Monads in Python**
 
 ## How They Work & Why You Shouldn't Use Them
