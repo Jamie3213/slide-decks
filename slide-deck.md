@@ -115,7 +115,7 @@ img[alt~="center"] {
 }
 </style>
 
-</br>
+<br />
 
 ![width:600px center](assets/either.svg)
 
@@ -205,7 +205,7 @@ img[alt="center"] {
 }
 </style>
 
-</br>
+<br />
 
 ![width:800px center](assets/fmap.svg)
 
@@ -269,7 +269,7 @@ Functors are just a means to:
 
 > Currying converts a function of `n` parameters into `n` functions, each with a single parameter.
 
-</br>
+<br />
 
 ```python
 from pymonad.tools import curry
@@ -319,7 +319,7 @@ img[alt~="center"] {
 }
 </style>
 
-</br>
+<br />
 
 ![width:800px center](assets/amap.svg)
 
@@ -380,7 +380,7 @@ img[alt="center"] {
 }
 </style>
 
-</br>
+<br />
 
 ![width:800px center](assets/bind.svg)
 
@@ -474,7 +474,7 @@ my_var = get_env("MY_VAR")
 print(my_var.run())
 ```
 
-</br>
+<br />
 
 * `IO` is considered pure because it doesn't actually execute anything
 * `IO` contains *instructions* on how to perfom `IO`
@@ -486,7 +486,7 @@ print(my_var.run())
 
 > If it looks like a duck, swims like a duck and quacks like a duck, then it's probably a duck.
 
-</br>
+<br />
 
 * Are functions really pure just because we delay their execution?
 * If anything, all `IO` tells us is that the function is *definitely* doing something impure
@@ -538,7 +538,7 @@ img[alt~="center-rounded-shadow"] {
   
 > Monads aren't Pythonic.
 
-</br>
+<br />
 
 * Python shouldn't look like Haskell, Scala, Clojure, OCaml, F#, Lisp, ML etc.
 * You're not the only person who has to maintain your code
