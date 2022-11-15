@@ -427,7 +427,7 @@ result = (
 )
 
 # 5,000
-resut.either(
+result.either(
     lambda left: print(left),
     lambda right: print(right)
 )
