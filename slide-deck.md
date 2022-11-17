@@ -22,7 +22,7 @@ marp: true
 
 ---
 
-## **Intermediary variables are for losers**
+## **Bye bye intermediary variables**
 
 We could do this:
 
@@ -44,7 +44,7 @@ h_result = h(g(f(x)))
 
 ## **What makes a function "pure"?**
 
-* Referential transparency
+* Same inputs evaluate to the same output
 * Freedom from side-effects
 
 ---
@@ -56,7 +56,7 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-✅ Referentially transparent
+✅ Same inputs evaluate to the same output
 ✅ Free from side-effects
 
 </br>
@@ -69,7 +69,7 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-❌ Referentially transparent
+✅ Same inputs evaluate to the same output
 ❌ Free from side-effects
 
 ---
@@ -189,12 +189,12 @@ add_one(zero_point_five)
 
 ---
 
-## **Compose like Beethoven with `fmap`**
+## **Compose like Beethoven with `map`**
 
-We can use a Functor's `fmap` method to compose functions.
+We can use a Functor's `map` method to compose functions.
 
 ```python
-def fmap(self: "Functor[T]", function: Callable[[T], U]) -> "Functor[U]": ...
+def map(self: "Functor[T]", function: Callable[[T], U]) -> "Functor[U]": ...
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -207,7 +207,7 @@ img[alt="center"] {
 
 <br />
 
-![width:800px center](assets/fmap.svg)
+![width:800px center](assets/map.svg)
 
 ---
 
@@ -224,8 +224,6 @@ result.either(
     lambda right: print(right)
 )
 ```
-
-Annoyingly, PyMonad renamed `fmap` to `map` in its latest release 👎
 
 ---
 
@@ -327,7 +325,7 @@ img[alt~="center"] {
 
 ## **How is `amap` useful to us?**
 
-> `Either` is a Functor because it defines an `fmap` method, but it's also an Applicative because it also defines an `amap` method.
+> `Either` is a Functor because it defines an `map` method, but it's also an Applicative because it also defines an `amap` method.
 
 </br>
 
