@@ -45,7 +45,7 @@ h_result = h(g(f(x)))
 ## **What makes a function "pure"?**
 
 * Same inputs evaluate to the same output
-* Freedom from side-effects
+* Free from side-effects
 
 ---
 
