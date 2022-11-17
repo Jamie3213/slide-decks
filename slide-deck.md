@@ -44,7 +44,7 @@ h_result = h(g(f(x)))
 
 ## **What makes a function "pure"?**
 
-* Same inputs evaluate to the same output
+* Depends only on its inputs
 * Free from side-effects
 
 ---
@@ -56,7 +56,7 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-✅ Same inputs evaluate to the same output
+✅ Depends only on its inputs
 ✅ Free from side-effects
 
 </br>
@@ -69,7 +69,7 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-✅ Same inputs evaluate to the same output
+✅ Depends only on its inputs
 ❌ Free from side-effects
 
 ---
@@ -82,7 +82,7 @@ def add(a: int, b: int) -> int:
 * Get user input
 * Generate random numbers
 * Call a REST API
-* Raise exceptions
+* Raise/handle exceptions
 
 ---
 
@@ -104,6 +104,17 @@ Sometimes spoken about as:
 * "A value wrapped in a computational context"
 
 ---
+
+## **Wait, why can't I use exceptions?**
+
+Getting a succint answer to this is nearly impossible.
+
+The crux is:
+
+* Handling exceptions can make functions non-deterministic
+* Raising exceptions inf a pure function is mis-leading
+
+___
 
 ### **Exception handling with `Either`**
 
