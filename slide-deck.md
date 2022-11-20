@@ -112,9 +112,9 @@ Getting a succint answer to this is nearly impossible.
 The crux is:
 
 * Handling exceptions can make functions non-deterministic
-* Raising exceptions inf a pure function is mis-leading
+* Raising exceptions in a pure function is mis-leading
 
-___
+---
 
 ### **Exception handling with `Either`**
 
@@ -428,11 +428,11 @@ divide_by_two = divide(2.0)
 os.environ["NUMBER"] = "10"
 
 result = (
-    get_env("NUMBER")
-    .map(lambda num: float(num))
-    .bind(divide_by_two)
-    .map(lambda num: num * 1_000)
-    .map(lambda num: f"{num:,.0f}")
+    get_env("NUMBER") # Right("10")
+    .map(lambda num: float(num)) # Right(10.0)
+    .bind(divide_by_two) # Right(5.0)
+    .map(lambda num: num * 1_000) # Right(5,000.0)
+    .map(lambda num: f"{num:,.0f}") # Right("5,000")
 )
 
 # 5,000
