@@ -565,3 +565,13 @@ img[alt~="center-rounded-shadow"] {
 ## **Don't be a zealout**
 
 > When it comes to FP, we should be pragmatic, taking the parts of the paradigm that work for us and make our code better and not worrying ourselves too much about the parts that don’t.
+
+---
+
+## **References**
+
+1. [Functional Programming Simplified](https://alvinalexander.com/scala/functional-programming-simplified-book/)
+2. [Functors, Applicatives, and Monads in Pictures](https://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)
+3. [Learn You a Haskell For Great Good - Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
+4. [F# for Fun and Profit - Understanding map and apply](https://fsharpforfunandprofit.com/posts/elevated-world/)
+5. [An Introduction to Functional Programming](https://codewords.recurse.com/issues/one/an-introduction-to-functional-programming)
