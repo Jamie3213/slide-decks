@@ -22,7 +22,7 @@ marp: true
 
 ---
 
-## **Bye bye intermediary variables**
+## **Intermediary variables are for losers**
 
 We could do this:
 
@@ -38,14 +38,14 @@ h_result = h(g_result)
 h_result = h(g(f(x)))
 ```
 
-(If only there was a prettier way to do this 🥺)
+If only there was a prettier way to do this 🥺...
 
 ---
 
 ## **What makes a function "pure"?**
 
-* Depends only on its inputs
-* Free from side-effects
+* Referential transparency
+* Freedom from side-effects
 
 ---
 
@@ -56,7 +56,7 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-✅ Depends only on its inputs
+✅ Referentially transparent
 ✅ Free from side-effects
 
 </br>
@@ -69,20 +69,17 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-✅ Depends only on its inputs
+❌ Referentially transparent
 ❌ Free from side-effects
 
 ---
 
 ### **Some things a pure function can't do** 🙃
 
-* Log to console, file, stream etc.
-* Read/write files
-* Read from/write to a database
-* Get user input
+* Log
+* Interact with files, databases or REST APIs
 * Generate random numbers
-* Call a REST API
-* Raise/handle exceptions
+* Handle/raise exceptions
 
 ---
 
@@ -96,27 +93,9 @@ def add(a: int, b: int) -> int:
 
 A way to wrap a value in order to **encode behaviour**.
 
-</br>
-
-Sometimes spoken about as:
-
-* "A box we put values into"
-* "A value wrapped in a computational context"
-
 ---
 
-## **Wait, why can't I use exceptions?**
-
-Getting a succint answer to this is nearly impossible.
-
-The crux is:
-
-* Handling exceptions can make functions non-deterministic
-* Raising exceptions in a pure function is mis-leading
-
----
-
-### **Exception handling with `Either`**
+### **Exceptions with `Either`**
 
 <!-- markdownlint-disable MD033 -->
 <style>
@@ -156,15 +135,17 @@ def divide(a: float, b: float) -> Either[ZeroDivisionError, float]:
 
 ---
 
+> Using a Functor, we've been able to encode the occurrence of an exception without compromising purity.
+
+---
+
 ## **Pure functions are honest** 😇
 
  > The type signature of a pure function tells us about the good days *and* the bad days
 
 ---
 
-## **I have this dream where I'm trapped in a Functor and I can't get out**
-
-How do we get values out of `Either`?
+## **How do we get values out of `Either`?**
 
 ```python
 success = divide(1.0, 2.0)
@@ -185,9 +166,7 @@ failure.either(
 
 ---
 
-## **You can't fit a square peg in a round hole**
-
-How do we pass an `Either` into a normal function?
+## **How do we use Functors with normal functions?**
 
 ```python
 add_one = lambda a: a + 1
@@ -200,7 +179,7 @@ add_one(zero_point_five)
 
 ---
 
-## **Compose like Beethoven with `map`**
+## **Function composition with `map`**
 
 We can use a Functor's `map` method to compose functions.
 
@@ -249,11 +228,11 @@ format_as_string = lambda a: f"{a:,}"
 
 result = (
     divide(4.0, 2.0)
-    .then(add_ten)
-    .then(multiply_by_two)
-    .then(cube)
-    .then(convert_to_int)
-    .then(format_as_string)
+    .map(add_ten)
+    .map(multiply_by_two)
+    .map(cube)
+    .map(convert_to_int)
+    .map(format_as_string)
 )
 
 # 13,824
@@ -274,7 +253,7 @@ Functors are just a means to:
 
 ---
 
-## **All this talk of curry is making me hungry**
+## **How do we use multi-parameter functions in a composition chain?**
 
 > Currying converts a function of `n` parameters into `n` functions, each with a single parameter.
 
@@ -288,15 +267,12 @@ def add_n(n: int, a: int) -> int:
     return a + n
 
 add_one = add_n(1)
-add_two = add_n(2)
 
-# 2, 3
-print(add_one(1), add_two(1), sep=", ")
+# 2, 2
+print(add_one(1), add_n(1)(1), sep=", ")
 ```
 
 ---
-
-## **What happens if we want to use a curried function directly in a composition chain?**
 
 ```python
 result = (
@@ -308,7 +284,6 @@ result = (
 
 * `map(add_n)` returns a function wrapped in a Functor
 * We can't use another call to `map` to pass a value into the function because `map` doesn't know what to do with a function wrapped in a Functor
-
 
 ---
 
@@ -402,126 +377,36 @@ Using `bind` let's us compose Monadic functions (instead of normal, every-day fu
 ---
 
 ```python
-import os
-
 from pymonad.either import Either, Left, Right
 from pymonad.tools import curry
 
-
-def get_env(var: str) -> Either[KeyError, str]:
-    try:
-        return Right(os.environ[var])
-    except KeyError as e:
-        return Left(e)
-
 @curry(2)
 def divide(b: float, a: float) -> Either[ZeroDivisionError, float]:
-    if b == 0:
-        return Left(ZeroDivisionError)
-    else:
-        return Right(a / b)
+    return Left(ZeroDivisionError) if b == 0 else Right(a / b)
 
-
-divide_by_two = divide(2.0)
-
-# Normally, this would already be set in the environment.
-os.environ["NUMBER"] = "10"
+divide_by_three = divide(3.0)
+double = lambda x: 2 * x
 
 result = (
-    get_env("NUMBER") # Right("10")
-    .map(lambda num: float(num)) # Right(10.0)
-    .bind(divide_by_two) # Right(5.0)
-    .map(lambda num: num * 1_000) # Right(5,000.0)
-    .map(lambda num: f"{num:,.0f}") # Right("5,000")
+    divide(1.0, 2.0)
+    .map(double)
+    .bind(divide_by_three)
 )
 
-# 5,000
+# Result: 1.3
 result.either(
     lambda left: print(left),
-    lambda right: print(right)
+    lambda right: print(round(right, 1))
 )
 ```
 
 ---
 
-## ✋ **Erm, shouldn't you be using the IO Monad?**
+## **In summary**
 
-* We've been using `Either`, even for I/O actions - FP purists would call us out for this
-* In languages like Haskell, we'd use `IO`
-
----
-
-## **How does the `IO` Monad work?**
-
-`IO` wraps side-effecting functions and delays their execution.
-
-```python
-import os
-
-from pymonad.io import IO, _IO
-
-
-def get_env(var: str) -> _IO:
-    return IO(lambda: os.environ[var])
-
-
-os.environ["MY_VAR"] = "My environment variable"
-my_var = get_env("MY_VAR")
-
-# Type: <class 'pymonad.io._IO'>, value: <pymonad.io._IO object at 0x10095a890>
-print(f"Type: {type(my_var)}, value: {my_var}")
-```
-
----
-
-## **To get execute the function, we need to call the `run` method**
-
-```python
-my_var = get_env("MY_VAR")
-
-# My environment variable
-print(my_var.run())
-```
-
-<br />
-
-* `IO` is considered pure because it doesn't actually execute anything
-* `IO` contains *instructions* on how to perfom `IO`
-* A function using `IO` always returns a consistent result, i.e., an instance of `_IO`
-
----
-
-## **Did you buy that?**
-
-> If it looks like a duck, swims like a duck and quacks like a duck, then it's probably a duck.
-
-<br />
-
-* Are functions really pure just because we delay their execution?
-* If anything, all `IO` tells us is that the function is *definitely* doing something impure
-* `IO` alone still blows up on an error once we do run it
-* PyMonad doesn't support Monad transformers
-
----
-
-## **Just use a type alias**
-
-```python
-import os
-from typing import TypeAlias
-
-from pymonad.either import Either, Left, Right
-
-
-EnvironmentIO: TypeAlias = Either[KeyError, str]
-
-
-def get_env(var: str) -> EnvironmentIO:
-    try:
-        return Right(os.environ[var])
-    except KeyError as e:
-        return Left(e)
-```
+* Functors, Applicatives and Monads are all a means of maintaing functional purity
+* They each define a method which lets us compose functions under different circumstances
+* Most of the time, "Monad" is synoymous with Functor and Applicative
 
 ---
 
@@ -543,15 +428,14 @@ img[alt~="center-rounded-shadow"] {
 
 ---
 
-## **Square peg, round hole (again)**
-  
-> Monads aren't Pythonic.
+## **Monads aren't Pythonic**
 
 <br />
 
 * Python shouldn't look like Haskell, Scala, Clojure, OCaml, F#, Lisp, ML etc.
 * You're not the only person who has to maintain your code
 * Heavy use of Monads stops Python looking and behaving like Python
+* We only talked about *one* Monad, but there are tons more, e.g., `Reader`, `Writer`, `State`, `IO`, `Maybe`
 
 ---
 
@@ -559,6 +443,19 @@ img[alt~="center-rounded-shadow"] {
 
 * Easy function composition
 * Encoding behaviour in function signatures
+
+---
+
+## **You don't need Monads to write functional code**
+
+* We can achieve most of the benefits of FP without Monads (e.g., don't mutate global state, build functionality through small, composable functions)
+* Packages exist to enable piping and composition (e.g., `functoolz`) without needing to introduce the kinds of complexity Monads bring
+
+---
+
+## **Sometimes, we don't get a choice**
+
+* Frameworks often enforce certain programming styles, e.g., if we want a Databricks pipeline to fail, we *have* to raise an exception!
 
 ---
 
@@ -570,8 +467,8 @@ img[alt~="center-rounded-shadow"] {
 
 ## **References**
 
-1. [Functional Programming Simplified](https://alvinalexander.com/scala/functional-programming-simplified-book/)
-2. [Functors, Applicatives, and Monads in Pictures](https://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)
-3. [Learn You a Haskell For Great Good - Functors, Applicative Functors and Monoids](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
-4. [F# for Fun and Profit - Understanding map and apply](https://fsharpforfunandprofit.com/posts/elevated-world/)
-5. [An Introduction to Functional Programming](https://codewords.recurse.com/issues/one/an-introduction-to-functional-programming)
+1. [Learn You a Haskell For Great Good (Miran Lipovača)](http://learnyouahaskell.com)
+2. [Functors, Applicatives and Monads in Pictures (Adit Bhargava)](https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)
+3. [Functional Programming Simplified (Alvin Alexander)](https://fpsimplified.com)
+4. [An Introduction to Functional Programming (Mary Rose Cook)](https://codewords.recurse.com/issues/one/an-introduction-to-functional-programming)
+5. [Map And Bind And Apply, Oh My! (F# for Fun and Profit)](https://fsharpforfunandprofit.com/posts/elevated-world/#series-toc)
