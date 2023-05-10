@@ -41,10 +41,10 @@ def shout(word: str) -> None:
 
 ---
 
-In their simplest form, type hints let us:
+The two biggest benefits of type hints are that they help us to:
 
-* Convey more meaning to users about functions/methods/variables
-* Be explicit about the kinds of values we expect to give and receieve
+* Document our code better, being explicit about the kinds of values we pass around
+* Catch errors early (we'll see this more later)
 
 ---
 
