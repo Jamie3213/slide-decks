@@ -55,15 +55,7 @@ Type hints are **aesthetic**, they don't actually enforce anything in our code.
 </br></br></br></br>
 <p style="font-size: 0.8em">(we'll see later how we can get closer to something that looks like static typing 😍)</p>
 
-___
-
-## **What type hints _don't_ do**
-
-* Enforce the annotated type
-
-
 ---
-
 
 * Show how to type hint functions with `Callable`
 * Show how (and why) to define type aliases
