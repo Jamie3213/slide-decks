@@ -20,10 +20,7 @@ Nothing...necessarily 👀
 
 ___
 
-## **Type hints**
-
-<p style="font-size: 0.7em">(this is my favourite)</p>
-</br>
+## ✨ **Type hints** ✨
 
 From this:
 
@@ -41,10 +38,7 @@ def shout(word: str) -> None:
 
 ---
 
-The two biggest benefits of type hints are that they help us to:
-
-* Document our code better, being explicit about the kinds of values we pass around
-* Catch errors early (we'll see this more later)
+>Type hints help us **document our code more easily** and **catch errors early**.
 
 ---
 
@@ -57,7 +51,47 @@ Type hints are **aesthetic**, they don't actually enforce anything in our code.
 
 ---
 
+## **Type aliases**
+
+```python
+Point = tuple[float, float]
+
+def scale(point: Point, factor: float) -> Point:
+    return (factor * point[0], factor * point[1])
+
+
+UserId = str
+
+def delete_users(users: list[UserId]) -> None:
+    for user in users:
+        # Some logic here
+```
+
+---
+
+## **Built-ins vs. `typing`**
+
+```python
+from typing Dict, List, Tuple
+
+foo = List[int]
+bar = list[int]
+
+baz = Tuple[float, float]
+qux = tuple[float, float]
+
+spam = Dict[str, str]
+ham = dict[str, str]
+```
+
+Built-ins are preferred (e.g., `list`, `dict`).
+
+___
+
+## **Generic types**
+
+---
+
 * Show how to type hint functions with `Callable`
-* Show how (and why) to define type aliases
 * Show how typed generics work
-* Talk about Mypy
+* Talk about Mypy and linters
