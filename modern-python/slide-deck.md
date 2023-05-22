@@ -118,12 +118,56 @@ def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
 
 ---
 
+## **What exactly is a `Sequence`?**
+
+* Abstract base class (ABC) that implements `__getitem__` and `__len__`
+
+* Classes like `list` and `tuple` are "virtual" subclasses of `Sequence`
+
+* When we use `for` in a loop or comprehension, we call `iter()` which looks for `__iter__` or `__getitem__`
+
+```python
+from typing import Sequence
+
+issubclass(list, Sequence) # True
+issubclass(tuple, Sequence) # True
+issubclass(str, Sequence) # True
+```
+
+---
+
 ## **General in → specific out**
 
 Consider being more general in what your functions and methods accept but more specific in what they return:
 
 * `list[str]` vs. `Sequence[str]`
 * `dict[str, int]` vs. `Mapping[str, int]`
+
+---
+
+> If functions or methods only need their inputs to have very specific behaviours (e.g., the ability to be sequenced or iterated over), then consider using ABCs in type annotations to maintain flexibility.
+
+<br/>
+
+ABCs like `Sequence`, `Mapping`, `Iterable`, `Iterator` etc. are all just conceptual data containers that implement certain magic (dunder) methods.
+
+---
+
+## **What if I want to sub-type *my own* classes?**
+
+```python
+from typing import Generic, TypeVar
+
+
+T = TypeVar("T")
+
+class MagicList(Generic[T]):
+    def __init__(self, *args: T) -> None:
+        ...
+
+
+magic_list: MagicList[int] = MagicList(1, 2, 3)
+```
 
 ---
 
