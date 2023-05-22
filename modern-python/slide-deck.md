@@ -9,7 +9,7 @@ marp: true
 ---
 ## **What's wrong with how I write Python now?**
 
-Nothing...necessarily 👀
+Nothing (necessarily)
 
 ---
 
@@ -44,10 +44,11 @@ def shout(word: str) -> None:
 
 ## **But isn't Python dynamically typed?** 🤔
 
-Type hints are **aesthetic**, they don't actually enforce anything in our code.
+⚠️ Type hints are **aesthetic**, they don't actually enforce anything in our code. ⚠️
 
-</br></br></br></br>
-<p style="font-size: 0.8em">(we'll see later how we can get closer to something that looks like static typing 😍)</p>
+<br/>
+
+![width:750px](./assets/type_hints_are_aesthetic.gif)
 
 ---
 
@@ -69,7 +70,7 @@ def delete_users(users: list[UserId]) -> None:
 
 ---
 
-## **Built-ins vs. `typing`**
+## **Built-ins vs. `from typing import ...`**
 
 ```python
 from typing Dict, List, Tuple
@@ -88,10 +89,46 @@ Built-ins are preferred (e.g., `list`, `dict`).
 
 ___
 
-## **Generic types**
+## **We can type-hint functions too**
+
+```python
+from typing import Any, Callable, Sequence
+
+def apply(func: Callable[[Any], Any], values: Sequence[Any]) -> list[Any]:
+    return [func(value) for value in values]
+
+values = (1, 2, 3)
+double = lambda x: 2 * x
+applied_values = apply(double, values) # [2, 4, 6]
+```
 
 ---
 
-* Show how to type hint functions with `Callable`
-* Show how typed generics work
+## **Typed generics**
+
+```python
+from typing import Callable, Sequence, TypeVar
+
+T = TypeVar("T")
+U = TypeVar("U")
+
+def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
+    return [func(value) for value in values]
+```
+
+---
+
+## **General in → specific out**
+
+Consider being more general in what your functions and methods accept but more specific in what they return:
+
+* `list[str]` vs. `Sequence[str]`
+* `dict[str, int]` vs. `Mapping[str, int]`
+
+---
+
+* Typed generics
+* Structual vs. nominal sub-typing
+* Protocols vs abc.ABC
 * Talk about Mypy and linters
+* How does Any work
