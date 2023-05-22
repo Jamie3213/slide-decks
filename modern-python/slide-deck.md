@@ -138,18 +138,11 @@ issubclass(str, Sequence) # True
 
 ## **General in → specific out**
 
-Consider being more general in what your functions and methods accept but more specific in what they return:
-
-* `list[str]` vs. `Sequence[str]`
-* `dict[str, int]` vs. `Mapping[str, int]`
-
----
-
 > If functions or methods only need their inputs to have very specific behaviours (e.g., the ability to be sequenced or iterated over), then consider using ABCs in type annotations to maintain flexibility.
 
 <br/>
 
-ABCs like `Sequence`, `Mapping`, `Iterable`, `Iterator` etc. are all just conceptual data containers that implement certain magic (dunder) methods.
+ABCs like `Sequence`, `Mapping`, `Iterable`, `Iterator` etc. are all just conceptual containers that implement certain magic (dunder) methods.
 
 ---
 
@@ -168,6 +161,10 @@ class MagicList(Generic[T]):
 
 magic_list: MagicList[int] = MagicList(1, 2, 3)
 ```
+
+---
+
+## **Nominal vs. structural subtyping**
 
 ---
 
