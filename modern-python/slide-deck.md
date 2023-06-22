@@ -75,6 +75,7 @@ def delete_users(users: list[UserId]) -> None:
 ```python
 from typing Dict, List, Tuple
 
+
 foo = List[int]
 bar = list[int]
 
@@ -94,6 +95,7 @@ ___
 ```python
 from typing import Any, Callable, Sequence
 
+
 def apply(func: Callable[[Any], Any], values: Sequence[Any]) -> list[Any]:
     return [func(value) for value in values]
 
@@ -108,26 +110,14 @@ applied_values = apply(double, values) # [2, 4, 6]
 
 * When we use `Any`, we're basically adding a type hint for the sake of it
 * Objects annotated with `Any` **do not** get type checked
+* We can leave `Any` out and it will be inferred by a type checker
 
 ```python
 from typing import Callable, Sequence
 
+
 def apply(func: Callable, values: Sequence) -> list:
     return [func(value) for value in values]
-```
-
----
-
-## **Typed generics**
-
-```python
-from typing import Callable, Sequence, TypeVar
-
-T = TypeVar("T")
-U = TypeVar("U")
-
-def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
-    return [func(value) for value in values] 
 ```
 
 ---
@@ -143,9 +133,30 @@ def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
 ```python
 from typing import Sequence
 
+
 issubclass(list, Sequence) # True
 issubclass(tuple, Sequence) # True
 issubclass(str, Sequence) # True
+```
+
+---
+
+## **Typed generics**
+
+```python
+from typing import Callable, Sequence, TypeVar
+
+
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
+    return [func(value) for value in values]
+
+
+def first(values: Sequence[T]) -> T | None:
+    return values[0] if len(values) != 0 else None
 ```
 
 ---
@@ -156,7 +167,7 @@ issubclass(str, Sequence) # True
 
 <br/>
 
-ABCs like `Sequence`, `Mapping`, `Iterable`, `Iterator` etc. are all just interfaces with certain abstract methods that we need to override (usually dunder methods).
+ABCs like `Sequence`, `Mapping`, `Iterable` and `Iterator` are all just interfaces with abstract methods for us to override (usually dunder methods like `__get__` or `__next__`).
 
 ---
 
@@ -178,30 +189,63 @@ magic_list: MagicList[int] = MagicList(1, 2, 3)
 
 ---
 
-## **Nominal vs. structural subtyping**
+## **Nominal vs. structural typing**
+
+Nominal → compatibility determined from declared type - ***"is it?"***
+Structural → compatibility determined from structure - ***"does it?"***
 
 ---
 
+## **Interfaces - ABCs or Protocols?**
+
+* Languages like Java make a distinction between *interfaces* and *abstract classes*
+* In Python, we talk about interfaces and abstract classes interchangeably
+* We can define an interface using either `abc.ABC` or `typing.Protocol`
+
+---
+
+## **Using `abc.ABC` fits a nominal typing style**
+
 ```python
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
-class MyClass(ABC):
-
-    @abtsractmethod
-    def my_method() -> None:
-        """A method that does something"""
+class Sizeable(ABC):
 
     @abstractmethod
-    def my_other_method() -> None:
-        """A method that does something else"""
+    def size(self) -> int:
+        ...
 ```
 
 ---
 
-* How does Any work
-* Protocols vs abc.ABC
+To use an ABC, we have to declare that an object is a subclass through inheritance.
+
+```python
+def is_empty(container: Sizeable) -> bool:
+    return container.size() == 0
+
+
+class Trolley(Sizeable):
+    def __init__(self, items: list[str]) -> None:
+        self.items = items
+
+    def size(self) -> int:
+        return len(self.items)
+
+    def add_item(item: str) -> None:
+        self.items = [*self.items, item]
+
+
+trolley = Trolley(["Bread", "Milk", "Eggs"])
+print(is_empty(trolley)) # False
+
+```
+
+---
+
 * Mypy and linters (show things like config to enforce no use of `Any`)
+* Dataclasses (incl. pydantic)
 * Structural pattern matching
 * Pre-commit
 
