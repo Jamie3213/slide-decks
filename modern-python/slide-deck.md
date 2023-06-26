@@ -314,19 +314,39 @@ Python is already duck-typed, so couldn't we just have left out type annotations
 ## **How does it work?**
 
 ```python
+# my_module.py
+from typing import Protocol
+
+
+class Sizeable(Protocol):
+
+    def size(self) -> int:
+        ...
+
+
 def is_empty(container: Sizeable) -> bool:
     return container.size() == 0
 
 
 my_list = [1, 2, 3]
 print(is_empty(my_list))
-
-# Normal Python: python -m my_module -> exception
-# AttributeError: 'list' object has no attribute 'size'
-
-# Mypy: mypy my_module.py -> type checker exception
-# error: Argument 1 to "is_empty" has incompatible type "List[int]"; expected "Sizeable"
 ```
+
+---
+
+Without a type checker, we only find out about errors in our code when we run it:
+
+![GIF of a runtime error](./assets/runtime_error.gif)
+
+---
+
+With a type checker like Mypy, we flag the type error before ever running the code:
+
+![GIF of a Mypy type error](./assets/type_checker_error.gif)
+
+---
+
+## **Mypy type checker**
 
 ---
 
