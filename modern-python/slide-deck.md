@@ -18,7 +18,12 @@ Nothing (necessarily)
 * Just because I like it doesn't mean you have to
 * Take what you like, and leave what you don't
 
-___
+---
+
+* Dataclasses (incl. pydantic)
+* Structural pattern matching
+
+---
 
 ## ✨ **Type hints** ✨
 
@@ -200,6 +205,7 @@ Structural → compatibility determined from structure - ***"does it?"***
 
 * Languages like Java make a distinction between *interfaces* and *abstract classes*
 * In Python, we talk about interfaces and abstract classes interchangeably
+* When we talk about an interface, we're really just thinking of a *blueprint*
 * We can define an interface using either `abc.ABC` or `typing.Protocol`
 
 ---
@@ -219,7 +225,7 @@ class Sizeable(ABC):
 
 ---
 
-To use an ABC, we have to declare that an object is a subclass through inheritance.
+To use an ABC, we have to explicitly inherit from the parent class.
 
 ```python
 def is_empty(container: Sizeable) -> bool:
@@ -244,14 +250,94 @@ print(is_empty(trolley)) # False
 
 ---
 
+## **Using `typing.Protocol` fits a structrual style**
+
+Protocols let us make use of static duck-typing and help us to define generic type bounds.
+
+```python
+from typing import Protocol
+
+
+class Sizeable(Protocol):
+
+    def size(self) -> int:
+        ...
+```
+
+---
+
+```python
+def is_empty(container: Sizeable) -> bool:
+    return container.size() == 0
+
+
+class Trolley:  # No need to inherit from Sizeable
+    def __init__(self, items: list[str]) -> None:
+        self.items = items
+
+    def size(self) -> int:
+        return len(self.items)
+
+    def add_item(item: str) -> None:
+        self.items = [*self.items, item]
+
+
+trolley = Trolley(["Bread", "Milk", "Eggs"])
+print(is_empty(trolley)) # False
+```
+
+---
+
+Python is already duck-typed, so couldn't we just have left out type annotations and still run the program as normal?
+
+(Yes 😬)
+
+---
+
+## **Is it worth all the effort?**
+
+* To really take advantages of type hints, we need to use a **static type checker**
+* We incoporate type checkers into our workflow and flag when type checking fails
+* We try to convert runtime errors into pre-runtime errors from the type checker
+
+---
+
+## **Mypy to the rescue**
+
+* Most popular static type checker for Python
+* CLI support and IDE integration (e.g., VS Code, IntelliJ IDEs)
+* Active contributors include Guido van Rossum
+* Installed like any Python package (`pip`, `poetry`, `conda` etc.)
+
+---
+
+## **How does it work?**
+
+```python
+def is_empty(container: Sizeable) -> bool:
+    return container.size() == 0
+
+
+my_list = [1, 2, 3]
+print(is_empty(my_list))
+
+# Normal Python: python -m my_module -> exception
+# AttributeError: 'list' object has no attribute 'size'
+
+# Mypy: mypy my_module.py -> type checker exception
+# error: Argument 1 to "is_empty" has incompatible type "List[int]"; expected "Sizeable"
+```
+
+---
+
 * Mypy and linters (show things like config to enforce no use of `Any`)
-* Dataclasses (incl. pydantic)
-* Structural pattern matching
 * Pre-commit
 
 ---
 
 ## **References**
 
+* [PEP-484 - Type Hints](https://peps.python.org/pep-0484/)
 * [`collections.abc` documentation](https://docs.python.org/3/library/collections.abc.html)
-* [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039)
+* [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039) - take a look to see how virtual subclasses are defined with `Sequence.register`
+* [Mypy docs](https://mypy.readthedocs.io/en/stable/)
