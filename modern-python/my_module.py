@@ -93,4 +93,16 @@ class ValidatedClass:
     integer: int
 
 
-validated_class = ValidatedClass(string=100, integer="100")
+# validated_class = ValidatedClass(string=100, integer="100")
+
+order = {}
+
+match order:
+    case {"order_type": "order_placed", **rest}:
+        print(f"Order placed")
+    case {"order_type": "order_cancelled", **rest}:
+        print("Order cancelled")
+    case _:
+        print("Something else")
+
+

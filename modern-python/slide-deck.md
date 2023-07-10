@@ -20,7 +20,57 @@ Nothing (necessarily)
 
 ---
 
-* Structural pattern matching
+## **Structural pattern matching**
+
+* Python's (less useful), version of Scala pattern matching.
+* Similar to `if` statements.
+* Used for checking the _structure_ of an object, not just its value
+
+---
+
+We can avoid code like `if isinctance(animal, Dog)` using the much nicer `match` syntax:
+
+```python
+match animal:
+    case Dog():
+        print("woof!")
+    case Cat():
+        print("meow!")
+    case Bird():
+        print("tweet!")
+    case _:
+        print("Wait, there are more than three animals?!")
+```
+
+---
+
+We destructure objects if we're only interested in specific aspects of their structure:
+
+```python
+match point:
+    case (0, _):
+        print("Has no x-component")
+    case (_, 0):
+        print("Has no y-component")
+    case (x, y):
+        print(f"x={x}, y={y}")
+    case _:
+        print("Not a point")
+
+
+match order:
+    case {"order_type": "order_placed", **rest}:
+        print(f"Order placed")
+    case {"order_type": "order_cancelled", **rest}:
+        print("Order cancelled")
+    case _:
+        print("Something else")
+```
+
+---
+
+* Most useful when matching some aspect of the overall object structure
+* If matching against literals, it's usually easier to just use the more familiar if/else.
 
 ---
 
@@ -345,16 +395,19 @@ With a type checker like Mypy, we flag the type error before ever running the co
 
 ---
 
-## **Mypy type checker**
+## **We can get real-time feedback in our IDE**
 
 ---
 
-* Mypy and linters (show things like config to enforce no use of `Any`)
-* Pre-commit
+## **Mypy is configurable**
 
 ---
 
-## **Give your data structure with dataclasses**
+## **Bring your CI pipeline closer to home with pre-commit**
+
+---
+
+## **Give your data structure with data classes**
 
 * Avoid passing data around as naked Python objects
 * Provide a schema without the need for verbose class syntax
@@ -384,7 +437,7 @@ jamie = Person(**external_data)
 
 ---
 
-Without dataclasses, things don't look anywhere near as pretty 🤮
+Without data classes, things don't look anywhere near as pretty 🤮
 
 ```python
 class Person:
@@ -403,13 +456,13 @@ class Person:
 
 ---
 
-## **Dataclasses come with lots of nice features...**
+## **Data classes come with lots of nice features...**
 
-* Dataclasses are much cleaner and more readable.
-* We can define methods on dataclasses like we would with a normal class.
+* Data classes are much cleaner and more readable.
+* We can define methods on data classes like we would with a normal class.
 * We get boring methods like `__init__`, `__repr__`, `__eq__`, `__ne__` etc. for free.
 * We can use `@datclass(frozen=True)` to make instances immutable.
-* Functions like `dataclasses.asdict` can convert the dataclass back to a `dict`.
+* Functions like `dataclasses.asdict` can convert the data class back to a `dict`.
 
 ---
 
@@ -438,15 +491,15 @@ unvalidated_class = UnvalidatedClass(**data)
 
 ## ⚠️ **PSA** ⚠️
 
-* Dataclass inputs aren't validated for type.
+* Data class inputs aren't validated for type.
 * We can pass anything we want as the arguments to the class.
 * We can use magic methods like `__post_init__` to validate inputs, but that's ugly!
 
 ---
 
-## **Enter `pydantic` dataclasses**
+## **Consider `pydantic` data classes**
 
-* Like normal dataclasses on steroids
+* Like normal data classes on steroids
 * Can validate inputs based on type
 
 ```python
@@ -477,7 +530,11 @@ validated_class = ValidatedClass(string=100, integer="100")
 
 ## **References**
 
+* [PEP-636 - Structural Pattern Matching](https://peps.python.org/pep-0636/)
 * [PEP-484 - Type Hints](https://peps.python.org/pep-0484/)
-* [`collections.abc` documentation](https://docs.python.org/3/library/collections.abc.html)
-* [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039) - take a look to see how virtual subclasses are defined with `Sequence.register`
+* [`collections.abc` docs](https://docs.python.org/3/library/collections.abc.html)
+* [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039)
 * [Mypy docs](https://mypy.readthedocs.io/en/stable/)
+* [Pre-commit docs](https://pre-commit.com)
+* [Python data class docs](https://docs.python.org/3/library/dataclasses.html)
+* [Pydantic data class docs](https://docs.pydantic.dev/latest/)
