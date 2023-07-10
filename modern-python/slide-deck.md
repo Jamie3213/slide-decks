@@ -20,7 +20,6 @@ Nothing (necessarily)
 
 ---
 
-* Dataclasses (incl. pydantic)
 * Structural pattern matching
 
 ---
@@ -352,6 +351,127 @@ With a type checker like Mypy, we flag the type error before ever running the co
 
 * Mypy and linters (show things like config to enforce no use of `Any`)
 * Pre-commit
+
+---
+
+## **Give your data structure with dataclasses**
+
+* Avoid passing data around as naked Python objects
+* Provide a schema without the need for verbose class syntax
+
+---
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class Person:
+    name: str
+    age: int
+    occupation: str
+    hobbies: list[str]
+
+external_data = {
+    "name": "Jamie",
+    "age": 29,
+    "occupation": "Data Engineer",
+    "hobbies": ["Python", "Python", "More Python"]
+}
+
+jamie = Person(**external_data)
+```
+
+---
+
+Without dataclasses, things don't look anywhere near as pretty 🤮
+
+```python
+class Person:
+    def __init__(
+        self,
+        name: str,
+        age: int,
+        occupation: str,
+        hobbies: list[str],
+    ) -> None:
+        self.name = name
+        self.age = age
+        self.occupation = occupation
+        self.hobbies = hobbies
+```
+
+---
+
+## **Dataclasses come with lots of nice features...**
+
+* Dataclasses are much cleaner and more readable.
+* We can define methods on dataclasses like we would with a normal class.
+* We get boring methods like `__init__`, `__repr__`, `__eq__`, `__ne__` etc. for free.
+* We can use `@datclass(frozen=True)` to make instances immutable.
+* Functions like `dataclasses.asdict` can convert the dataclass back to a `dict`.
+
+---
+
+## **...but they're also deceptive**
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class UnvalidatedClass:
+    string: str
+    integer: int
+
+
+data = {
+    "string": 100,
+    "integer: "100",
+}
+
+# Instantiates without issue ⚠️
+unvalidated_class = UnvalidatedClass(**data)
+```
+
+---
+
+## ⚠️ **PSA** ⚠️
+
+* Dataclass inputs aren't validated for type.
+* We can pass anything we want as the arguments to the class.
+* We can use magic methods like `__post_init__` to validate inputs, but that's ugly!
+
+---
+
+## **Enter `pydantic` dataclasses**
+
+* Like normal dataclasses on steroids
+* Can validate inputs based on type
+
+```python
+from pydantic.dataclasses import dataclass
+
+
+@dataclass
+class ValidatedClass:
+    string: str
+    integer: int
+
+
+# ValidationError: 1 validation error for ValidatedClass
+# Input should be a valid string [type=string_type, input_value=100, input_type=int]
+validated_class = ValidatedClass(string=100, integer="100")
+
+```
+
+---
+
+## **As always, it's about tradeoffs**
+
+* Richer functionality for data parsing and serialization with `pydantic`
+* Yet another external dependency in a project
+* Much less light-weight than `dataclasses.dataclass`
 
 ---
 
