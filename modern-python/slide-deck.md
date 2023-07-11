@@ -1,5 +1,6 @@
 ---
 marp: true
+paginate: true
 ---
 
 # **Modern Python** 🐍
@@ -7,6 +8,7 @@ marp: true
 ## Like Regular Python, But Better
 
 ---
+
 ## **What's wrong with how I write Python now?**
 
 Nothing (necessarily)
@@ -22,13 +24,13 @@ Nothing (necessarily)
 
 ## **Structural pattern matching**
 
-* Python's (less useful), version of Scala pattern matching.
-* Similar to `if` statements.
+* Python's (less useful), version of Scala pattern matching
+* Similar to `if` statements
 * Used for checking the _structure_ of an object, not just its value
 
 ---
 
-We can avoid code like `if isinctance(animal, Dog)` using the much nicer `match` syntax:
+We can avoid code like `if isinstance(animal, Dog)` using the `match` syntax:
 
 ```python
 match animal:
@@ -44,7 +46,7 @@ match animal:
 
 ---
 
-We destructure objects if we're only interested in specific aspects of their structure:
+We can easily destructure objects using the `match` syntax:
 
 ```python
 match point:
@@ -56,8 +58,13 @@ match point:
         print(f"x={x}, y={y}")
     case _:
         print("Not a point")
+```
 
+---
 
+We can even hone in on specific parts of an object and ignore the rest:
+
+```python
 match order:
     case {"order_type": "order_placed", **rest}:
         print(f"Order placed")
@@ -69,8 +76,128 @@ match order:
 
 ---
 
+## **When would I acually use this?**
+
 * Most useful when matching some aspect of the overall object structure
-* If matching against literals, it's usually easier to just use the more familiar if/else.
+* If matching against literals, it's usually easier to just use the more familiar if/else
+
+---
+
+## **Consistently format your code with Black**
+
+* Poor formatting makes reading code and spotting mistakes hard
+* We can use a code formatter like **Black** to enforce consistent formatting in our projects
+* Installed with `pip`, `poetry`, `conda` etc.
+* IDE plug-ins available
+
+---
+
+## **How does it work?**
+
+```bash
+$ black my_module.py
+reformatted my_module.py
+
+All done! ✨ 🍰 ✨
+1 file reformatted.
+```
+
+---
+
+```python
+# In
+my_long_list = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eigth", "ninth", "tenth"]
+
+# Out
+my_long_list = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eigth",
+    "ninth",
+    "tenth",
+]
+```
+
+---
+
+```python
+# In
+result = Client().do_this()\
+    .then_do_this()\
+    .then_this()\
+    .and_finally_this()
+
+# Out
+result = (
+    Client().do_this()
+    .then_do_this()
+    .then_this()
+    .and_finally_this()
+)
+```
+
+---
+
+## **Black is _opinionated_**
+
+Actually, Black is _very_ opinionated:
+
+* Sometimes you won't like how if formats your code
+* Sometimes you'll like how it formats your code and another person in your team won't
+
+```python
+# True ✅
+no_one_fully_happy + consistent == everyone_happy
+```
+
+(but if you're _really_ unhappy, it's configurable)
+
+---
+
+## **Stop manually sorting your imports**
+
+* Sort your imports with Isort
+* Installed like Black - `pip`, `poetry`, `conda` etc.
+
+```bash
+$ isort modern-python/my_module.py
+Fixing my_module.py
+```
+
+---
+
+```python
+# In
+from datetime import timezone, datetime, timedelta
+import asyncio
+from airflow.models.baseoperator import BaseOperator
+import functools
+
+
+# Out
+import asyncio
+import functools
+from datetime import datetime, timedelta, timezone
+
+from airflow.models.baseoperator import BaseOperator
+```
+
+---
+
+* Splits imports into separate stdlib and non-stdlib import blocks
+* Auto-sorts import blocks alphabetically
+* Auto-sorts `import ...` and `from ... import ...`
+* Even has native compability with Black:
+
+    ```bash
+    $ isort my_module.py --profile black
+    Fixing my_module.py
+    ```
 
 ---
 
@@ -100,9 +227,14 @@ def shout(word: str) -> None:
 
 ⚠️ Type hints are **aesthetic**, they don't actually enforce anything in our code. ⚠️
 
-<br/>
+```python
+def say_hello(name: str) -> None:
+    print(f"Hello, {name}!")
 
-![width:750px](./assets/type_hints_are_aesthetic.gif)
+
+# Prints 'Hello, 100!'
+say_hello(100)
+```
 
 ---
 
@@ -140,7 +272,7 @@ spam = Dict[str, str]
 ham = dict[str, str]
 ```
 
-Built-ins are preferred (e.g., `list`, `dict`).
+Built-ins are preferred, e.g., `list`, `dict`.
 
 ___
 
@@ -155,7 +287,7 @@ def apply(func: Callable[[Any], Any], values: Sequence[Any]) -> list[Any]:
 
 values = (1, 2, 3)
 double = lambda x: 2 * x
-applied_values = apply(double, values) # [2, 4, 6]
+applied_values = apply(double, values)  # [2, 4, 6]
 ```
 
 ---
@@ -188,9 +320,9 @@ def apply(func: Callable, values: Sequence) -> list:
 from typing import Sequence
 
 
-issubclass(list, Sequence) # True
-issubclass(tuple, Sequence) # True
-issubclass(str, Sequence) # True
+issubclass(list, Sequence)  # True
+issubclass(tuple, Sequence)  # True
+issubclass(str, Sequence)  # True
 ```
 
 ---
@@ -221,11 +353,11 @@ def first(values: Sequence[T]) -> T | None:
 
 <br/>
 
-ABCs like `Sequence`, `Mapping`, `Iterable` and `Iterator` are all just interfaces with abstract methods for us to override (usually dunder methods like `__get__` or `__next__`).
+ABCs like `Sequence`, `Mapping`, `Iterable` and `Iterator` are all just interfaces with abstract methods for us to override - usually dunder methods like `__get__` or `__next__`.
 
 ---
 
-## **What if I want to subtype *my own* classes?**
+## **What if I want to subtype _my own_ classes?**
 
 ```python
 from typing import Generic, TypeVar
@@ -293,7 +425,7 @@ class Trolley(Sizeable):
 
 
 trolley = Trolley(["Bread", "Milk", "Eggs"])
-print(is_empty(trolley)) # False
+print(is_empty(trolley))  # False
 
 ```
 
@@ -332,7 +464,7 @@ class Trolley:  # No need to inherit from Sizeable
 
 
 trolley = Trolley(["Bread", "Milk", "Eggs"])
-print(is_empty(trolley)) # False
+print(is_empty(trolley))  # False
 ```
 
 ---
@@ -351,7 +483,7 @@ Python is already duck-typed, so couldn't we just have left out type annotations
 
 ---
 
-## **Mypy to the rescue**
+## **Mypy to the rescue** 🦸‍♀️
 
 * Most popular static type checker for Python
 * CLI support and IDE integration (e.g., VS Code, IntelliJ IDEs)
@@ -360,7 +492,7 @@ Python is already duck-typed, so couldn't we just have left out type annotations
 
 ---
 
-## **How does it work?**
+## **What does it do?**
 
 ```python
 # my_module.py
@@ -385,13 +517,36 @@ print(is_empty(my_list))
 
 Without a type checker, we only find out about errors in our code when we run it:
 
-![GIF of a runtime error](./assets/runtime_error.gif)
+```shell
+$ python my_module.py
+Traceback (most recent call last):
+  File "my_module.py", line 16, in <module>
+    print(is_empty(my_list))
+          ^^^^^^^^^^^^^^^^^
+  File "my_module.py", line 12, in is_empty
+    return container.size() == 0
+           ^^^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'size'
+```
 
 ---
 
 With a type checker like Mypy, we flag the type error before ever running the code:
 
-![GIF of a Mypy type error](./assets/type_checker_error.gif)
+```shell
+$ mypy my_module.py
+my_module.py:16: error: Argument 1 to "is_empty" has incompatible type "List[int]"; expected "Sizeable"
+Found 1 error in 1 file (checked 1 source file)
+```
+
+---
+
+## **What's the big deal?**
+
+* We found an error in our code without actually running it
+* We turned what _would've_ been a runtime error into a pre-runtime error
+* Imagine an ML workflow failing after 10 hours because you mis-typed a method name
+* With Mypy, we catch these errors early and avoid more pain further down the line
 
 ---
 
@@ -401,9 +556,102 @@ With a type checker like Mypy, we flag the type error before ever running the co
 
 ## **Mypy is configurable**
 
+We can add a `mypy.ini` file to our project and configure aspects of type checking:
+
+```text
+[mypy]
+disallow_any_expr = True
+disallow_untyped_defs = True
+```
+
+We can even disable type checking on specific lines:
+
+```python
+something = ...  # type: ignore
+```
+
 ---
 
 ## **Bring your CI pipeline closer to home with pre-commit**
+
+* Pre-commit is a Python-based framework for managing Git hooks
+* We can configure hooks to run everytime we commit (which should be often!)
+* Pre-commit has a bank of pre-defined, easy-to-use hooks
+* Hooks already exist for Black, Isort and Mypy!
+* Easily installed with `pip`, `conda`, `brew` etc.
+
+---
+
+We configure our hooks with using a `.pre-commit-config.yaml` file:
+
+```yaml
+repos:
+  -   repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v1.4.1
+      hooks:
+      -   id: mypy
+          name: Run Mypy static type checking
+  -   repo: https://github.com/psf/black
+      rev: 23.7.0
+      hooks:
+      -   id: black
+          name: Format Python code in Black style
+  -   repo: https://github.com/PyCQA/isort
+      rev: 5.12.0
+      hooks:
+      -   id: isort
+          args: ["--profile", "black"]
+          name: Sort module imports with Isort
+```
+
+---
+
+```shell
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+
+$ pre-commit run --all-files
+Run Mypy static type checking............................................Failed
+- hook id: mypy
+- exit code: 1
+
+modern-python/my_module.py:20: error: "list[int]" has no attribute "size"  [attr-defined]
+Found 1 error in 1 file (checked 1 source file)
+
+Format Python code in Black style........................................Failed
+- hook id: black
+- files were modified by this hook
+
+reformatted modern-python/my_module.py
+
+All done! ✨ 🍰 ✨
+1 file reformatted.
+
+Sort module imports with Isort...........................................Passed
+```
+
+---
+
+```shell
+# After fixing errors
+$ git add --all
+$ git commit -m "My great new feature"
+Run Mypy static type checking............................................Passed
+Format Python code in Black style........................................Passed
+Sort module imports with Isort...........................................Passed
+
+```
+
+---
+
+* Tons of existing hooks, including checks for:
+  * Mixed line endings
+  * Trailing whitespace
+  * Validate terraform, run tflint etc.
+  * Format YAML, JSON, TOML etc.
+* Easy to define custom hooks, e.g., to run unit tests on commit
+* Create a tighter feedback loop and bring your CI checks closer to you
+* Support for other languages/frameworks like `node`, `dotnet`, `golang`, `rust`, `r`
 
 ---
 
@@ -512,6 +760,8 @@ class ValidatedClass:
     integer: int
 
 
+# Throws the validation error:
+#
 # ValidationError: 1 validation error for ValidatedClass
 # Input should be a valid string [type=string_type, input_value=100, input_type=int]
 validated_class = ValidatedClass(string=100, integer="100")
@@ -528,6 +778,10 @@ validated_class = ValidatedClass(string=100, integer="100")
 
 ---
 
+## **Key takeaways**
+
+---
+
 ## **References**
 
 * [PEP-636 - Structural Pattern Matching](https://peps.python.org/pep-0636/)
@@ -535,6 +789,7 @@ validated_class = ValidatedClass(string=100, integer="100")
 * [`collections.abc` docs](https://docs.python.org/3/library/collections.abc.html)
 * [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039)
 * [Mypy docs](https://mypy.readthedocs.io/en/stable/)
+* [Mypy configuration docs](https://mypy.readthedocs.io/en/stable/config_file.html)
 * [Pre-commit docs](https://pre-commit.com)
 * [Python data class docs](https://docs.python.org/3/library/dataclasses.html)
 * [Pydantic data class docs](https://docs.pydantic.dev/latest/)
