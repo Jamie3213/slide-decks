@@ -5,7 +5,7 @@ paginate: true
 
 # **Modern Python** 🐍
 
-## Like Regular Python, But Better
+## (aka Python for people who wish Python was statically typed)
 
 ---
 
@@ -19,67 +19,6 @@ Nothing (necessarily)
 
 * Just because I like it doesn't mean you have to
 * Take what you like, and leave what you don't
-
----
-
-## **Structural pattern matching**
-
-* Python's (less useful), version of Scala pattern matching
-* Similar to `if` statements
-* Used for checking the _structure_ of an object, not just its value
-
----
-
-We can avoid code like `if isinstance(animal, Dog)` using the `match` syntax:
-
-```python
-match animal:
-    case Dog():
-        print("woof!")
-    case Cat():
-        print("meow!")
-    case Bird():
-        print("tweet!")
-    case _:
-        print("Wait, there are more than three animals?!")
-```
-
----
-
-We can easily destructure objects using the `match` syntax:
-
-```python
-match point:
-    case (0, _):
-        print("Has no x-component")
-    case (_, 0):
-        print("Has no y-component")
-    case (x, y):
-        print(f"x={x}, y={y}")
-    case _:
-        print("Not a point")
-```
-
----
-
-We can even hone in on specific parts of an object and ignore the rest:
-
-```python
-match order:
-    case {"order_type": "order_placed", **rest}:
-        print(f"Order placed")
-    case {"order_type": "order_cancelled", **rest}:
-        print("Order cancelled")
-    case _:
-        print("Something else")
-```
-
----
-
-## **When would I acually use this?**
-
-* Most useful when matching some aspect of the overall object structure
-* If matching against literals, it's usually easier to just use the more familiar if/else
 
 ---
 
@@ -150,12 +89,12 @@ Actually, Black is _very_ opinionated:
 * Sometimes you won't like how if formats your code
 * Sometimes you'll like how it formats your code and another person in your team won't
 
-```python
-# True ✅
-no_one_fully_happy + consistent == everyone_happy
-```
+    ```python
+    # True ✅
+    no_one_fully_happy + consistent == everyone_happy
+    ```
 
-(but if you're _really_ unhappy, it's configurable)
+    (but if you're _really_ unhappy, it's configurable)
 
 ---
 
@@ -164,10 +103,10 @@ no_one_fully_happy + consistent == everyone_happy
 * Sort your imports with Isort
 * Installed like Black - `pip`, `poetry`, `conda` etc.
 
-```bash
-$ isort modern-python/my_module.py
-Fixing my_module.py
-```
+    ```bash
+    $ isort modern-python/my_module.py
+    Fixing my_module.py
+    ```
 
 ---
 
@@ -188,6 +127,8 @@ from airflow.models.baseoperator import BaseOperator
 ```
 
 ---
+
+## **When you run Isort it...**
 
 * Splits imports into separate stdlib and non-stdlib import blocks
 * Auto-sorts import blocks alphabetically
@@ -274,13 +215,15 @@ ham = dict[str, str]
 
 Built-ins are preferred, e.g., `list`, `dict`.
 
-___
+---
 
 ## **We can type-hint functions too**
 
 ```python
 from typing import Any, Callable, Sequence
 
+
+# Syntax: Callable[[InputType, InputType, ...], ReturnType]
 
 def apply(func: Callable[[Any], Any], values: Sequence[Any]) -> list[Any]:
     return [func(value) for value in values]
@@ -298,13 +241,13 @@ applied_values = apply(double, values)  # [2, 4, 6]
 * Objects annotated with `Any` **do not** get type checked
 * We can leave `Any` out and it will be inferred by a type checker
 
-```python
-from typing import Callable, Sequence
+    ```python
+    from typing import Callable, Sequence
 
 
-def apply(func: Callable, values: Sequence) -> list:
-    return [func(value) for value in values]
-```
+    def apply(func: Callable, values: Sequence) -> list:
+        return [func(value) for value in values]
+    ```
 
 ---
 
@@ -655,141 +598,11 @@ Sort module imports with Isort...........................................Passed
 
 ---
 
-## **Give your data structure with data classes**
-
-* Avoid passing data around as naked Python objects
-* Provide a schema without the need for verbose class syntax
-
----
-
-```python
-from dataclasses import dataclass
-
-
-@dataclass
-class Person:
-    name: str
-    age: int
-    occupation: str
-    hobbies: list[str]
-
-external_data = {
-    "name": "Jamie",
-    "age": 29,
-    "occupation": "Data Engineer",
-    "hobbies": ["Python", "Python", "More Python"]
-}
-
-jamie = Person(**external_data)
-```
-
----
-
-Without data classes, things don't look anywhere near as pretty 🤮
-
-```python
-class Person:
-    def __init__(
-        self,
-        name: str,
-        age: int,
-        occupation: str,
-        hobbies: list[str],
-    ) -> None:
-        self.name = name
-        self.age = age
-        self.occupation = occupation
-        self.hobbies = hobbies
-```
-
----
-
-## **Data classes come with lots of nice features...**
-
-* Data classes are much cleaner and more readable.
-* We can define methods on data classes like we would with a normal class.
-* We get boring methods like `__init__`, `__repr__`, `__eq__`, `__ne__` etc. for free.
-* We can use `@datclass(frozen=True)` to make instances immutable.
-* Functions like `dataclasses.asdict` can convert the data class back to a `dict`.
-
----
-
-## **...but they're also deceptive**
-
-```python
-from dataclasses import dataclass
-
-
-@dataclass
-class UnvalidatedClass:
-    string: str
-    integer: int
-
-
-data = {
-    "string": 100,
-    "integer: "100",
-}
-
-# Instantiates without issue ⚠️
-unvalidated_class = UnvalidatedClass(**data)
-```
-
----
-
-## ⚠️ **PSA** ⚠️
-
-* Data class inputs aren't validated for type.
-* We can pass anything we want as the arguments to the class.
-* We can use magic methods like `__post_init__` to validate inputs, but that's ugly!
-
----
-
-## **Consider `pydantic` data classes**
-
-* Like normal data classes on steroids
-* Can validate inputs based on type
-
-```python
-from pydantic.dataclasses import dataclass
-
-
-@dataclass
-class ValidatedClass:
-    string: str
-    integer: int
-
-
-# Throws the validation error:
-#
-# ValidationError: 1 validation error for ValidatedClass
-# Input should be a valid string [type=string_type, input_value=100, input_type=int]
-validated_class = ValidatedClass(string=100, integer="100")
-
-```
-
----
-
-## **As always, it's about tradeoffs**
-
-* Richer functionality for data parsing and serialization with `pydantic`
-* Yet another external dependency in a project
-* Much less light-weight than `dataclasses.dataclass`
-
----
-
-## **Key takeaways**
-
----
-
 ## **References**
 
-* [PEP-636 - Structural Pattern Matching](https://peps.python.org/pep-0636/)
 * [PEP-484 - Type Hints](https://peps.python.org/pep-0484/)
 * [`collections.abc` docs](https://docs.python.org/3/library/collections.abc.html)
 * [`Sequence` source code](https://github.com/python/cpython/blob/8bb16f665691b2869e107e180208d28b292bf3bd/Lib/_collections_abc.py#L973-L1039)
 * [Mypy docs](https://mypy.readthedocs.io/en/stable/)
 * [Mypy configuration docs](https://mypy.readthedocs.io/en/stable/config_file.html)
 * [Pre-commit docs](https://pre-commit.com)
-* [Python data class docs](https://docs.python.org/3/library/dataclasses.html)
-* [Pydantic data class docs](https://docs.pydantic.dev/latest/)
