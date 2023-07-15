@@ -5,13 +5,20 @@ paginate: true
 
 # **Modern Python** 🐍
 
-## (aka Python for people who wish Python was statically typed)
+## Like regular Python, but better (IMO)
+
+<!-- Thanks everyone for joining the second Python Community talk today. -->
+<!-- I'm Jamie, I'm a data engineer in the Data & AI practice -->
+<!-- I'm going to talk today about what I'm loosely calling "Modern Python" and hopefully you'll see what I mean by that as I go on. -->
 
 ---
 
 ## **What's wrong with how I write Python now?**
 
 Nothing (necessarily)
+
+<!-- Before we get into anything, let's answer a first question: what's wrong with the Python you're writing now? -->
+<!-- I don't know what kind of Python you write but I'd argue there's probably nothing wrong with it. -->
 
 ---
 
@@ -20,125 +27,14 @@ Nothing (necessarily)
 * Just because I like it doesn't mean you have to
 * Take what you like, and leave what you don't
 
----
-
-## **Consistently format your code with Black**
-
-* Poor formatting makes reading code and spotting mistakes hard
-* We can use a code formatter like **Black** to enforce consistent formatting in our projects
-* Installed with `pip`, `poetry`, `conda` etc.
-* IDE plug-ins available
-
----
-
-## **How does it work?**
-
-```bash
-$ black my_module.py
-reformatted my_module.py
-
-All done! ✨ 🍰 ✨
-1 file reformatted.
-```
-
----
-
-```python
-# In
-my_long_list = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eigth", "ninth", "tenth"]
-
-# Out
-my_long_list = [
-    "first",
-    "second",
-    "third",
-    "fourth",
-    "fifth",
-    "sixth",
-    "seventh",
-    "eigth",
-    "ninth",
-    "tenth",
-]
-```
-
----
-
-```python
-# In
-result = Client().do_this()\
-    .then_do_this()\
-    .then_this()\
-    .and_finally_this()
-
-# Out
-result = (
-    Client().do_this()
-    .then_do_this()
-    .then_this()
-    .and_finally_this()
-)
-```
-
----
-
-## **Black is _opinionated_**
-
-Actually, Black is _very_ opinionated:
-
-* Sometimes you won't like how if formats your code
-* Sometimes you'll like how it formats your code and another person in your team won't
-
-    ```python
-    # True ✅
-    no_one_fully_happy + consistent == everyone_happy
-    ```
-
-    (but if you're _really_ unhappy, it's configurable)
-
----
-
-## **Stop manually sorting your imports**
-
-* Sort your imports with Isort
-* Installed like Black - `pip`, `poetry`, `conda` etc.
-
-    ```bash
-    $ isort modern-python/my_module.py
-    Fixing my_module.py
-    ```
-
----
-
-```python
-# In
-from datetime import timezone, datetime, timedelta
-import asyncio
-from airflow.models.baseoperator import BaseOperator
-import functools
-
-
-# Out
-import asyncio
-import functools
-from datetime import datetime, timedelta, timezone
-
-from airflow.models.baseoperator import BaseOperator
-```
-
----
-
-## **When you run Isort it...**
-
-* Splits imports into separate stdlib and non-stdlib import blocks
-* Auto-sorts import blocks alphabetically
-* Auto-sorts `import ...` and `from ... import ...`
-* Even has native compability with Black:
-
-    ```bash
-    $ isort my_module.py --profile black
-    Fixing my_module.py
-    ```
+<!-- One of the important things to say at the top is that I'm going to talk about some newer features of Python, but
+just because a feature is new doesn't mean it's better. -->
+<!-- On top of that, just because I like a feature doesn't necessarily mean you will as well. -->
+<!-- There's nothing cut and dry here, it's my opinion that writing in the style I'll show you is better, but that
+doesn't make it true. -->
+<!-- My advice would be, if there's anything I talk about today that you like, then adopt it in your code. -->
+<!-- If there are things I talk about that you don't like, then don't adopt those things. -->
+<!-- With that said, let's start with what is, hands-down, my favourite Python feature... -->
 
 ---
 
@@ -158,9 +54,24 @@ def shout(word: str) -> None:
     print(f"{str.upper(word)}!")
 ```
 
+<!-- So what do type hints do? -->
+<!-- I've got two blocks of code here which each define the same function "shout". -->
+<!-- "shout" takes in a string and then uppercases that string and prints it to the console. -->
+<!-- In the first block, I've got shout written with a traditional Python syntax -->
+<!-- In the second block, I've got shout written using "type annotations" or "type hints" -->
+<!-- Hopefully it's clear that all type hints do here is that they provide an explicit defintiion of expected type of the functions inputs along with the expected type of its output. -->
+<!-- So here I specify that "word" is of type string, and I use the built-in Python string class to do that, and since all I do is print to the console, my function implicitly returns None, so then I use this arrow syntax and give a type hint to say that my function returns None. -->
+<!-- And in its simplest form, that's what type annotations look like in Python -->
 ---
 
+## **Why would I want to use type hints?**
+
 >Type hints help us **document our code more easily** and **catch errors early**.
+
+<!-- So why are these type annotations something that you'd be ineterested in using? -->
+<!-- To me there are two main benefits to using type hints. -->
+<!-- The first I think is already evident in that simple example which is that using type hints lets us document our code more easily. By defining the inputs and outputs of our functions explcitly we make it much easier for the people reading and using our code to understand it. -->
+<!-- The second is that using type hints lets us catch errors earlier than we otherwise would, and we'll talk in some more depth about that a bit later. -->
 
 ---
 
@@ -175,6 +86,28 @@ def say_hello(name: str) -> None:
 
 # Prints 'Hello, 100!'
 say_hello(100)
+```
+
+<!-- One thing you might already be thinking is, wait, isn't Python a dynamically typed language? -->
+<!-- Yes, Python is and presumably will always be a dynamically typed language. -->
+<!-- One of the most important things to emphasise at this point is that type hints are purely aesthetic - they have absolutely no impact on the running of your code. -->
+<!-- Python couldn't care less what type annotations you use, as long as at runtime it can run your code without errors -->
+<!-- So as an example here I've got this "say_hello" function which just prints an interpolated string to the console using the name we pass in. -->
+<!-- If we call that function with 100, an integer, as the argument, Python will still run that function just fine because it knows how to coerce an integer to a string. -->
+<!-- Again, the interpreter doesn't respect or know anything about type annotations we use. -->
+
+---
+
+## **Sub-typing**
+
+Lots of classes in Python have a natural concept of a *sub-type*, e.g., a collection of type A contains elements of type B.
+
+```python
+list[str]
+tuple[int, int]
+tuple[int, ...]
+dict[str, str | None]  # dict[str, Optional[str]]
+dict[str, int | float]  # dict[str, Union[int, float]]
 ```
 
 ---
@@ -194,6 +127,12 @@ def delete_users(users: list[UserId]) -> None:
     for user in users:
         # Some logic here
 ```
+
+<!-- Type aliases are a nice way to try and convey more meaning from a type hint. -->
+<!-- So here I've defined a "Point" and Point is just a type alias for a tuple of two floats. -->
+<!-- Even though Point isn't a class, I can now use it like one in my type hints. -->
+<!-- I've got another example here where I alias a string as a UserId, and then I use that in my function and sub-type list, so my function takes a list of user IDs and then does some processing of them. -->
+<!-- I don't think type hints are ground-breaking at all but they can be useful occasionally like I said as a way to impart a bit more meaning or context to your type hints. -->
 
 ---
 
@@ -232,6 +171,9 @@ values = (1, 2, 3)
 double = lambda x: 2 * x
 applied_values = apply(double, values)  # [2, 4, 6]
 ```
+<!-- We've seen how to type hint simple variables or collections like lists or dictionaries, but we can also type hint more complex things like functions. -->
+<!-- When we type hint a function we use a Callable that we import from the typing module. -->
+<!-- We sub-type Callable and provide a list of input types and then the return type for the function. -->
 
 ---
 
@@ -251,25 +193,6 @@ applied_values = apply(double, values)  # [2, 4, 6]
 
 ---
 
-## **What exactly is a `Sequence`?**
-
-* Originates in `collections.abc`
-
-* An interface that defines `__getitem__` and `__len__` abstract methods
-
-* Classes like `list`, `tuple` and `str` are *"virtual subclasses"* of `Sequence`
-
-```python
-from typing import Sequence
-
-
-issubclass(list, Sequence)  # True
-issubclass(tuple, Sequence)  # True
-issubclass(str, Sequence)  # True
-```
-
----
-
 ## **Typed generics**
 
 ```python
@@ -284,8 +207,33 @@ def apply(func: Callable[[T], U], values: Sequence[T]) -> list[U]:
     return [func(value) for value in values]
 
 
-def first(values: Sequence[T]) -> T | None:
-    return values[0] if len(values) != 0 else None
+# Valid to a type checker ✅
+numbers: tuple[int, int, int] = (1, 2, 3)
+double: Callable[[int], int] = lambda x: x * 2
+doubled = apply(double, numbers)
+
+# Invalid to a type checker ❌
+words: list[str] = ["one", "two", "three"]
+square: Callable[[int], int] = lambda x: x ** 2
+squared = apply(square, words)
+```
+
+---
+
+## **What exactly is a `Sequence`?**
+
+* Originates in `collections.abc`
+* `collections.abc` defines useful interfaces for general Python data collections
+* The `Sequence` interface that defines `__getitem__` and `__len__` abstract methods
+* Classes like `list`, `tuple` and `str` are *"virtual subclasses"* of `Sequence`
+
+```python
+from typing import Sequence
+
+
+issubclass(list, Sequence)  # True
+issubclass(tuple, Sequence)  # True
+issubclass(str, Sequence)  # True
 ```
 
 ---
@@ -300,7 +248,7 @@ ABCs like `Sequence`, `Mapping`, `Iterable` and `Iterator` are all just interfac
 
 ---
 
-## **What if I want to subtype _my own_ classes?**
+## **What if I want to subtype *my own* classes?**
 
 ```python
 from typing import Generic, TypeVar
@@ -493,10 +441,6 @@ Found 1 error in 1 file (checked 1 source file)
 
 ---
 
-## **We can get real-time feedback in our IDE**
-
----
-
 ## **Mypy is configurable**
 
 We can add a `mypy.ini` file to our project and configure aspects of type checking:
@@ -512,6 +456,126 @@ We can even disable type checking on specific lines:
 ```python
 something = ...  # type: ignore
 ```
+
+---
+
+## **Consistently format your code with Black**
+
+* Poor formatting makes reading code and spotting mistakes hard
+* We can use a code formatter like **Black** to enforce consistent formatting in our projects
+* Installed with `pip`, `poetry`, `conda` etc.
+* IDE plug-ins available
+
+---
+
+## **How does it work?**
+
+```bash
+$ black my_module.py
+reformatted my_module.py
+
+All done! ✨ 🍰 ✨
+1 file reformatted.
+```
+
+---
+
+```python
+# In
+my_long_list = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eigth", "ninth", "tenth"]
+
+# Out
+my_long_list = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eigth",
+    "ninth",
+    "tenth",
+]
+```
+
+---
+
+```python
+# In
+result = Client().do_this()\
+    .then_do_this()\
+    .then_this()\
+    .and_finally_this()
+
+# Out
+result = (
+    Client().do_this()
+    .then_do_this()
+    .then_this()
+    .and_finally_this()
+)
+```
+
+---
+
+## **Black is *opinionated***
+
+Actually, Black is *very* opinionated:
+
+* Sometimes you won't like how if formats your code
+* Sometimes you'll like how it formats your code and another person in your team won't
+
+    ```python
+    # True ✅
+    no_one_fully_happy + consistent == everyone_happy
+    ```
+
+    (but if you're *really* unhappy, it's configurable)
+
+---
+
+## **Stop manually sorting your imports**
+
+* Sort your imports with Isort
+* Installed like Black - `pip`, `poetry`, `conda` etc.
+
+    ```bash
+    $ isort modern-python/my_module.py
+    Fixing my_module.py
+    ```
+
+---
+
+```python
+# In
+from datetime import timezone, datetime, timedelta
+import asyncio
+from airflow.models.baseoperator import BaseOperator
+import functools
+
+
+# Out
+import asyncio
+import functools
+from datetime import datetime, timedelta, timezone
+
+from airflow.models.baseoperator import BaseOperator
+```
+
+---
+
+## **When you run Isort it...**
+
+* Splits imports into separate stdlib and non-stdlib import blocks
+* Auto-sorts import blocks alphabetically
+* Auto-sorts `import ...` and `from ... import ...`
+* Even has native compability with Black:
+
+    ```bash
+    $ isort my_module.py --profile black
+    Fixing my_module.py
+    ```
 
 ---
 
