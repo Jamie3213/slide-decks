@@ -5,8 +5,6 @@ paginate: true
 
 # **Modern Python** 🐍
 
-## Like regular Python, but better (IMO)
-
 <!-- Thanks everyone for joining the second Python Community talk today. -->
 <!-- I'm Jamie, I'm a data engineer in the Data & AI practice -->
 <!-- I'm going to talk today about what I'm loosely calling "Modern Python" and hopefully you'll see what I mean by that as I go on. -->
@@ -98,9 +96,9 @@ say_hello(100)
 
 ---
 
-## **Sub-typing**
+## **Subtyping**
 
-Lots of classes in Python have a natural concept of a *sub-type*, e.g., a collection of type A contains elements of type B.
+Lots of classes in Python have a natural concept of a *subtype*, e.g., a collection of type A contains elements of type B.
 
 ```python
 list[str]
@@ -109,6 +107,11 @@ tuple[int, ...]
 dict[str, str | None]  # dict[str, Optional[str]]
 dict[str, int | float]  # dict[str, Union[int, float]]
 ```
+
+<!-- A lot of the time we work with classes where it natually makes sense to think of one class being made of up of elements of another class. -->
+<!-- So I've said here that this is the idea of something like a collection of type A being made up of elements of type B. -->
+<!-- This is what we mean when we talk about subtypes. -->
+<!-- I have a bunch of simple examples here and in Python we specify the sup-type using this square bracket noration. -->
 
 ---
 
@@ -131,12 +134,13 @@ def delete_users(users: list[UserId]) -> None:
 <!-- Type aliases are a nice way to try and convey more meaning from a type hint. -->
 <!-- So here I've defined a "Point" and Point is just a type alias for a tuple of two floats. -->
 <!-- Even though Point isn't a class, I can now use it like one in my type hints. -->
+<!-- I've then got this "scale" function which takes a point and a factor and it just multiplies each element of the point by the factor and returns the resulting point, which is just a tuple. -->
 <!-- I've got another example here where I alias a string as a UserId, and then I use that in my function and sub-type list, so my function takes a list of user IDs and then does some processing of them. -->
-<!-- I don't think type hints are ground-breaking at all but they can be useful occasionally like I said as a way to impart a bit more meaning or context to your type hints. -->
+<!-- I don't think type aliase are ground-breaking at all but they can be useful occasionally like I said as a way to impart a bit more meaning or context to your type hints. -->
 
 ---
 
-## **Built-ins vs. `from typing import ...`**
+## ⚠️ **PSA - lowercase vs. uppercase type hints** ⚠️
 
 ```python
 from typing Dict, List, Tuple
@@ -153,6 +157,13 @@ ham = dict[str, str]
 ```
 
 Built-ins are preferred, e.g., `list`, `dict`.
+
+<!-- When you're using type hints in the wild you'll see them written in two slightly different ways. -->
+<!-- Sometimes people will use upper-case variants of classes, and these are imported from the typing module. So things like uppercase List and uppercase Tuple. -->
+<!-- Other times people will use the existing built-in, lowercase versions of those classes. -->
+<!-- Both are equivalent and actually now the uppercase variants are just alises to the lowercase variants. -->
+<!-- The reason both exist is that when type hints were first introducted, the built-in classes didn't support being used in type hints, whereas now they do have support. -->
+<!-- At some point far in the future the uppercase variants will be deprecated so if you can, it's best to use the lowercase built-ins. -->
 
 ---
 
@@ -172,8 +183,10 @@ double = lambda x: 2 * x
 applied_values = apply(double, values)  # [2, 4, 6]
 ```
 <!-- We've seen how to type hint simple variables or collections like lists or dictionaries, but we can also type hint more complex things like functions. -->
-<!-- When we type hint a function we use a Callable that we import from the typing module. -->
+<!-- When we type hint a function we use this Callable which we import from the typing module. -->
 <!-- We sub-type Callable and provide a list of input types and then the return type for the function. -->
+<!-- So in this example I have an "apply" function which takes some arbitrary function and some sequence of values, then it applies the function to each value in the sequence and returns the applied values in a list and you can see that it's just doing this using a list comprehension. -->
+<!-- So for my type hints for the inputs for this function I've used Callable and Sequence, and because I want my function to be generic, I've just subtyped Callable and Sequence as "Any" so that I can pass any single-paramater fuction and any sequence of values into the function. -->
 
 ---
 
@@ -190,6 +203,8 @@ applied_values = apply(double, values)  # [2, 4, 6]
     def apply(func: Callable, values: Sequence) -> list:
         return [func(value) for value in values]
     ```
+
+<!-- I said the reason I was using Any was because I wanted my function to be generic, but actually using Any is the wrong way to do that, so let's look at the right way. -->
 
 ---
 
@@ -218,6 +233,13 @@ square: Callable[[int], int] = lambda x: x ** 2
 squared = apply(square, words)
 ```
 
+<!-- The right way to make type hints generic is to use typed generics. -->
+<!-- I can do this by importing TypeVar from the typing module and then defining two generic types, T and U, which represent some unknown future types. -->
+<!-- The benefit of doing this is that I can keep my functions flexible but also embed the right relationships between the different types in the function signature. -->
+<!-- If we look at the "apply" function, the func arg is a function which takes a value of type T and returns a value of type U, so then if the fucntion takes values of type T, then my sequence should also contain values of type T because I apply the funtion to each element of sequence. -->
+<!-- Then because the function I pass to apply returns a value of type U, the resulting list should be a list of values of type U. -->
+<!-- Now the "apply" function can be properly type checked. -->
+
 ---
 
 ## **What exactly is a `Sequence`?**
@@ -227,42 +249,20 @@ squared = apply(square, words)
 * The `Sequence` interface that defines `__getitem__` and `__len__` abstract methods
 * Classes like `list`, `tuple` and `str` are *"virtual subclasses"* of `Sequence`
 
-```python
-from typing import Sequence
+    ```python
+    from typing import Sequence
 
 
-issubclass(list, Sequence)  # True
-issubclass(tuple, Sequence)  # True
-issubclass(str, Sequence)  # True
-```
+    issubclass(list, Sequence)  # True
+    issubclass(tuple, Sequence)  # True
+    issubclass(str, Sequence)  # True
+    ```
 
 ---
 
 ## **General in → specific out**
 
-> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using ABCs in type annotations to maintain flexibility.
-
-<br/>
-
-ABCs like `Sequence`, `Mapping`, `Iterable` and `Iterator` are all just interfaces with abstract methods for us to override - usually dunder methods like `__get__` or `__next__`.
-
----
-
-## **What if I want to subtype *my own* classes?**
-
-```python
-from typing import Generic, TypeVar
-
-
-T = TypeVar("T")
-
-class MagicList(Generic[T]):
-    def __init__(self, *args: T) -> None:
-        ...
-
-
-magic_list: MagicList[int] = MagicList(1, 2, 3)
-```
+> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using more generic data structures like `Sequence` in type annotations to maintain flexibility.
 
 ---
 
@@ -435,27 +435,9 @@ Found 1 error in 1 file (checked 1 source file)
 ## **What's the big deal?**
 
 * We found an error in our code without actually running it
-* We turned what _would've_ been a runtime error into a pre-runtime error
+* We turned what *would've* been a runtime error into a pre-runtime error
 * Imagine an ML workflow failing after 10 hours because you mis-typed a method name
 * With Mypy, we catch these errors early and avoid more pain further down the line
-
----
-
-## **Mypy is configurable**
-
-We can add a `mypy.ini` file to our project and configure aspects of type checking:
-
-```text
-[mypy]
-disallow_any_expr = True
-disallow_untyped_defs = True
-```
-
-We can even disable type checking on specific lines:
-
-```python
-something = ...  # type: ignore
-```
 
 ---
 
@@ -640,7 +622,6 @@ Sort module imports with Isort...........................................Passed
 ---
 
 ```shell
-# After fixing errors
 $ git add --all
 $ git commit -m "My great new feature"
 Run Mypy static type checking............................................Passed
