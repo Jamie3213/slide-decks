@@ -111,7 +111,7 @@ dict[str, int | float]  # dict[str, Union[int, float]]
 <!-- A lot of the time we work with classes where it natually makes sense to think of one class being made of up of elements of another class. -->
 <!-- So I've said here that this is the idea of something like a collection of type A being made up of elements of type B. -->
 <!-- This is what we mean when we talk about subtypes. -->
-<!-- I have a bunch of simple examples here and in Python we specify the sup-type using this square bracket noration. -->
+<!-- I have a bunch of simple examples here and in Python we specify subtypes by using this square bracket notation. -->
 
 ---
 
@@ -204,8 +204,9 @@ applied_values = apply(double, values)  # [2, 4, 6]
         return [func(value) for value in values]
     ```
 
-<!-- I said the reason I was using Any was because I wanted my function to be generic, but actually using Any is the wrong way to do that, so let's look at the right way. -->
-
+<!-- I said the reason I was using Any was because I wanted my function to be generic, but actually using Any is the wrong way to do that. -->
+<!-- Using Any doesn't make our type hints generic, it makes them overly-permissive and poorly scoped. -->
+<!-- Let's look at the right way to make our functions generic. -->
 ---
 
 ## **Typed generics**
@@ -234,7 +235,7 @@ squared = apply(square, words)
 ```
 
 <!-- The right way to make type hints generic is to use typed generics. -->
-<!-- I can do this by importing TypeVar from the typing module and then defining two generic types, T and U, which represent some unknown future types. -->
+<!-- We can do this by importing TypeVar from the typing module and then defining two generic types, T and U, which represent some unknown future types. -->
 <!-- The benefit of doing this is that I can keep my functions flexible but also embed the right relationships between the different types in the function signature. -->
 <!-- If we look at the "apply" function, the func arg is a function which takes a value of type T and returns a value of type U, so then if the fucntion takes values of type T, then my sequence should also contain values of type T because I apply the funtion to each element of sequence. -->
 <!-- Then because the function I pass to apply returns a value of type U, the resulting list should be a list of values of type U. -->
@@ -244,9 +245,9 @@ squared = apply(square, words)
 
 ## **What exactly is a `Sequence`?**
 
-* Originates in `collections.abc`
+* Originates in `collections.abc` (`typing.Sequence` is an alias)
 * `collections.abc` defines useful interfaces for general Python data collections
-* The `Sequence` interface that defines `__getitem__` and `__len__` abstract methods
+* The `Sequence` interface has two abstract methods: `__getitem__` and `__len__`
 * Classes like `list`, `tuple` and `str` are *"virtual subclasses"* of `Sequence`
 
     ```python
@@ -258,11 +259,23 @@ squared = apply(square, words)
     issubclass(str, Sequence)  # True
     ```
 
+<!-- I've been banding around the idea of a sequence but actually if you haven't used typing in Python then you might not be familiar with sequences, so what are they? -->
+
 ---
 
 ## **General in → specific out**
 
-> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using more generic data structures like `Sequence` in type annotations to maintain flexibility.
+> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using more generic data structures like `Sequence` in type annotations to maintain flexibility - we sometimes call this using generic type bounds, and interfaces are a great way to do this.
+
+---
+
+## **Interfaces - ABCs or Protocols?**
+
+* Languages like Java make a distinction between *interfaces* and *abstract classes*
+* In Python, we talk about interfaces and abstract classes interchangeably
+* When we talk about an interface, we're really just thinking of a *blueprint*
+* We can define an interface using either an abstract base class or a Protocol
+* Which one we opt for depends on the typing style we use
 
 ---
 
@@ -273,16 +286,7 @@ Structural → compatibility determined from structure - ***"does it?"***
 
 ---
 
-## **Interfaces - ABCs or Protocols?**
-
-* Languages like Java make a distinction between *interfaces* and *abstract classes*
-* In Python, we talk about interfaces and abstract classes interchangeably
-* When we talk about an interface, we're really just thinking of a *blueprint*
-* We can define an interface using either `abc.ABC` or `typing.Protocol`
-
----
-
-## **Using `abc.ABC` fits a nominal typing style**
+## **Using abstract base classes fits a nominal typing style**
 
 ```python
 from abc import ABC, abstractmethod
@@ -295,15 +299,14 @@ class Sizeable(ABC):
         ...
 ```
 
+<!-- I've got an example here where I define an abstract base class for something I've called a Sizeable, which is just an object with a "size" method. -->
+<!-- To do define the Sizeable class as abstract base class, we inherit from ABC and define the interface's methods using the "abstractmethod" decorator. -->
+
 ---
 
 To use an ABC, we have to explicitly inherit from the parent class.
 
 ```python
-def is_empty(container: Sizeable) -> bool:
-    return container.size() == 0
-
-
 class Trolley(Sizeable):
     def __init__(self, items: list[str]) -> None:
         self.items = items
@@ -315,16 +318,24 @@ class Trolley(Sizeable):
         self.items = [*self.items, item]
 
 
+def is_empty(container: Sizeable) -> bool:
+    return container.size() == 0
+
+
 trolley = Trolley(["Bread", "Milk", "Eggs"])
 print(is_empty(trolley))  # False
 
 ```
 
+<!-- When it comes to using that interface, because this is using a nominal style, I have to explicitly inherit from Sizeable. -->
+<!-- I've got a Trolley which inherits from Sizeable and which implements the "size" method as well as an extra method to add an item to the trolley. -->
+<!-- I've then got this module-level function which expects receive a Sizeable as its input, and which then returns either True or False depending on whether the result of calling the Sizeable's "size" method is zero. -->
+<!-- So I create a trolley with three items and call my "is_empty" function and it returns False like we'd expect. -->
+<!-- So that's the abstract base class appraoch, let's see how things change with Protocols. -->
+
 ---
 
-## **Using `typing.Protocol` fits a structrual style**
-
-Protocols let us make use of static duck-typing and help us to define generic type bounds.
+## **Using Protocols fits a structrual style**
 
 ```python
 from typing import Protocol
@@ -336,13 +347,12 @@ class Sizeable(Protocol):
         ...
 ```
 
+<!-- Protocols let us define interfaces just like abstract base classes, but they enable us to use static duck-typing. -->
+<!-- In this version I'm still defining the Sizeable interface, but I'm inheriting from Protocol instead of ABC, and I don't need to use that abstractmethod decorator on the "size" method. -->
+
 ---
 
 ```python
-def is_empty(container: Sizeable) -> bool:
-    return container.size() == 0
-
-
 class Trolley:  # No need to inherit from Sizeable
     def __init__(self, items: list[str]) -> None:
         self.items = items
@@ -354,15 +364,20 @@ class Trolley:  # No need to inherit from Sizeable
         self.items = [*self.items, item]
 
 
+def is_empty(container: Sizeable) -> bool:
+    return container.size() == 0
+
+
 trolley = Trolley(["Bread", "Milk", "Eggs"])
 print(is_empty(trolley))  # False
 ```
 
+<!-- Everything is essentially as it was before, the only difference is that now I haven't inherited from Sizeable when I defined the Trolley class. -->
+<!-- So I can run this and it will work as expected. -->
+
 ---
 
-Python is already duck-typed, so couldn't we just have left out type annotations and still run the program as normal?
-
-(Yes 😬)
+> Python is already duck-typed, so without type annotations, wouldn't this already work without using ABCs *or* Proctocols?
 
 ---
 
@@ -404,6 +419,10 @@ my_list = [1, 2, 3]
 print(is_empty(my_list))
 ```
 
+<!-- We've got a simplified version of our example from before where we've defined a Protocol called Sizeable. -->
+<!-- We're then passing a normal Python list to the "is_empty" function. -->
+<!-- So what do we expect to happen? -->
+
 ---
 
 Without a type checker, we only find out about errors in our code when we run it:
@@ -420,6 +439,10 @@ Traceback (most recent call last):
 AttributeError: 'list' object has no attribute 'size'
 ```
 
+<!-- Here, we run the code as usual and we get a runtime error. -->
+<!-- As we'd expect, Python complains because lists don't have a "size" method. -->
+<!-- The point is that this is a runtime error. -->
+
 ---
 
 With a type checker like Mypy, we flag the type error before ever running the code:
@@ -430,6 +453,9 @@ my_module.py:16: error: Argument 1 to "is_empty" has incompatible type "List[int
 Found 1 error in 1 file (checked 1 source file)
 ```
 
+<!-- Here, rather than running the code, we analyse it with Mypy. -->
+<!-- We now get a similar error, but it's an error in the context of mis-matched types. -->
+
 ---
 
 ## **What's the big deal?**
@@ -437,11 +463,21 @@ Found 1 error in 1 file (checked 1 source file)
 * We found an error in our code without actually running it
 * We turned what *would've* been a runtime error into a pre-runtime error
 * Imagine an ML workflow failing after 10 hours because you mis-typed a method name
-* With Mypy, we catch these errors early and avoid more pain further down the line
+* With Mypy - and by making the effort to use type hints - we catch these errors early
 
 ---
 
-## **Consistently format your code with Black**
+## **Wait...so ABC or Protocol?**
+
+* There's no "correct" choice
+* Protocols are more flexible and mirror the classic duck-typed Python style
+* In general, I prefer Protocols
+
+<!-- That's everything I wanted to say about type hints, but there are a couple of other nice tools that I think go well with this idea of "Modern Python". -->
+
+---
+
+## **Consistently format your code**
 
 * Poor formatting makes reading code and spotting mistakes hard
 * We can use a code formatter like **Black** to enforce consistent formatting in our projects
@@ -523,7 +559,7 @@ Actually, Black is *very* opinionated:
 * Installed like Black - `pip`, `poetry`, `conda` etc.
 
     ```bash
-    $ isort modern-python/my_module.py
+    $ isort my_module.py
     Fixing my_module.py
     ```
 
