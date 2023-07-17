@@ -115,31 +115,6 @@ dict[str, int | float]  # dict[str, Union[int, float]]
 
 ---
 
-## **Type aliases**
-
-```python
-Point = tuple[float, float]
-
-def scale(point: Point, factor: float) -> Point:
-    return (factor * point[0], factor * point[1])
-
-
-UserId = str
-
-def delete_users(users: list[UserId]) -> None:
-    for user in users:
-        # Some logic here
-```
-
-<!-- Type aliases are a nice way to try and convey more meaning from a type hint. -->
-<!-- So here I've defined a "Point" and Point is just a type alias for a tuple of two floats. -->
-<!-- Even though Point isn't a class, I can now use it like one in my type hints. -->
-<!-- I've then got this "scale" function which takes a point and a factor and it just multiplies each element of the point by the factor and returns the resulting point, which is just a tuple. -->
-<!-- I've got another example here where I alias a string as a UserId, and then I use that in my function and sub-type list, so my function takes a list of user IDs and then does some processing of them. -->
-<!-- I don't think type aliase are ground-breaking at all but they can be useful occasionally like I said as a way to impart a bit more meaning or context to your type hints. -->
-
----
-
 ## ⚠️ **PSA - lowercase vs. uppercase type hints** ⚠️
 
 ```python
@@ -167,13 +142,40 @@ Built-ins are preferred, e.g., `list`, `dict`.
 
 ---
 
+## **Type aliases**
+
+```python
+Point = tuple[float, float]
+
+def scale(point: Point, factor: float) -> Point:
+    return (factor * point[0], factor * point[1])
+
+
+UserId = str
+
+def delete_users(users: list[UserId]) -> None:
+    for user in users:
+        # Some logic here
+```
+
+<!-- Type aliases are a nice way to try and convey more meaning from a type hint. -->
+<!-- So here I've defined a "Point" and Point is just a type alias for a tuple of two floats. -->
+<!-- Even though Point isn't a class, I can now use it like one in my type hints. -->
+<!-- I've then got this "scale" function which takes a point and a factor and it just multiplies each element of the point by the factor and returns the resulting point, which is just a tuple. -->
+<!-- I've got another example here where I alias a string as a UserId, and then I use that in my function and sub-type list, so my function takes a list of user IDs and then does some processing of them. -->
+<!-- I don't think type aliase are ground-breaking at all but they can be useful occasionally like I said as a way to impart a bit more meaning or context to your type hints. -->
+
+---
+
 ## **We can type-hint functions too**
 
 ```python
-from typing import Any, Callable, Sequence
+from typing import Callable
 
+# Callable[[int, int], int]
+def add(a: int, b: int) -> int:
+    return a + b
 
-# Syntax: Callable[[InputType, InputType, ...], ReturnType]
 
 def apply(func: Callable[[Any], Any], values: Sequence[Any]) -> list[Any]:
     return [func(value) for value in values]
@@ -184,15 +186,15 @@ applied_values = apply(double, values)  # [2, 4, 6]
 ```
 <!-- We've seen how to type hint simple variables or collections like lists or dictionaries, but we can also type hint more complex things like functions. -->
 <!-- When we type hint a function we use this Callable which we import from the typing module. -->
-<!-- We sub-type Callable and provide a list of input types and then the return type for the function. -->
-<!-- So in this example I have an "apply" function which takes some arbitrary function and some sequence of values, then it applies the function to each value in the sequence and returns the applied values in a list and you can see that it's just doing this using a list comprehension. -->
-<!-- So for my type hints for the inputs for this function I've used Callable and Sequence, and because I want my function to be generic, I've just subtyped Callable and Sequence as "Any" so that I can pass any single-paramater fuction and any sequence of values into the function. -->
+<!-- We sub-type Callable and provide a list of input types and then the return type for the function and you can see that in the first example where our function takes two integers as inputs and returns an integer as its output. -->
+<!-- In the second example I have an "apply" function which takes some arbitrary function and some sequence of values, then it applies the function to each value in the sequence and returns the applied values in a list and you can see that it's just doing this using a list comprehension. -->
+<!-- So for my type hints I've used Callable and Sequence, and because I want my "apply" function to be generic and I don't know upfront the types that will be used, I've just subtyped Callable and Sequence as "Any" so that I can pass any single-paramater fuction and any sequence of values into the function. -->
 
 ---
 
 ## **Avoid `Any` wherever you can**
 
-* When we use `Any`, we're basically adding a type hint for the sake of it
+* We should use `Any` like as a last resort
 * Objects annotated with `Any` **do not** get type checked
 * We can leave `Any` out and it will be inferred by a type checker
 
@@ -234,8 +236,8 @@ square: Callable[[int], int] = lambda x: x ** 2
 squared = apply(square, words)
 ```
 
-<!-- The right way to make type hints generic is to use typed generics. -->
-<!-- We can do this by importing TypeVar from the typing module and then defining two generic types, T and U, which represent some unknown future types. -->
+<!-- The right way to make type hints generic is to use something called typed generics. -->
+<!-- We do this by importing TypeVar from the typing module and then defining two generic types, T and U, which represent some unknown future types. -->
 <!-- The benefit of doing this is that I can keep my functions flexible but also embed the right relationships between the different types in the function signature. -->
 <!-- If we look at the "apply" function, the func arg is a function which takes a value of type T and returns a value of type U, so then if the fucntion takes values of type T, then my sequence should also contain values of type T because I apply the funtion to each element of sequence. -->
 <!-- Then because the function I pass to apply returns a value of type U, the resulting list should be a list of values of type U. -->
@@ -265,7 +267,7 @@ squared = apply(square, words)
 
 ## **General in → specific out**
 
-> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using more generic data structures like `Sequence` in type annotations to maintain flexibility - we sometimes call this using generic type bounds, and interfaces are a great way to do this.
+> If functions or methods only need their inputs to have generic behaviours (e.g., the ability to be sequenced or iterated over), then consider using more generic data structures like `Sequence` in type annotations to maintain flexibility - we sometimes call this using generic type bounds, and interfaces are a great way to define generic type bounds.
 
 ---
 
@@ -327,9 +329,9 @@ print(is_empty(trolley))  # False
 
 ```
 
-<!-- When it comes to using that interface, because this is using a nominal style, I have to explicitly inherit from Sizeable. -->
+<!-- When it comes to using that interface, we have to explicitly inherit from Sizeable, again this is a nominal style. -->
 <!-- I've got a Trolley which inherits from Sizeable and which implements the "size" method as well as an extra method to add an item to the trolley. -->
-<!-- I've then got this module-level function which expects receive a Sizeable as its input, and which then returns either True or False depending on whether the result of calling the Sizeable's "size" method is zero. -->
+<!-- I've then got this module-level function which expects receive a Sizeable as its input, and then returns either True or False depending on whether the result of calling the Sizeable's "size" method is zero. -->
 <!-- So I create a trolley with three items and call my "is_empty" function and it returns False like we'd expect. -->
 <!-- So that's the abstract base class appraoch, let's see how things change with Protocols. -->
 
